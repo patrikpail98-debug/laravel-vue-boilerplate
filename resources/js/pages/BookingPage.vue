@@ -63,7 +63,7 @@ const route = useRoute();
 const playgroundId = route.params.playgroundId;
 
 const playgroundInfo = reactive({name: '', area_name: ''});
-const rules = reactive({maxHorizonDays: 14, maxDurationMinutes: 120, pricePer30Min: 0});
+const rules = reactive({maxHorizonDays: 60, maxDurationMinutes: 120, pricePer30Min: 0});
 const selection = ref(null);
 const loading = ref(false);
 const submitted = ref('');

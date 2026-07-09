@@ -51,7 +51,7 @@ import {showErrorToast} from '../../constants/toast.js';
 
 const props = defineProps({
     playgroundId: {type: [Number, String], required: true},
-    maxHorizonDays: {type: Number, default: 14},
+    maxHorizonDays: {type: Number, default: 60},
     maxDurationMinutes: {type: Number, default: 120},
     pricePer30Min: {type: Number, default: 0},
     slotMinutes: {type: Number, default: 30},
@@ -128,7 +128,7 @@ const slotClass = (slot) => {
         return 'btn-primary';
     }
     if (slot.booked || slot.past) {
-        return 'btn-disabled opacity-40';
+        return 'btn-disabled bg-base-300 text-base-content/40 border-base-300 cursor-not-allowed';
     }
     return 'btn-outline';
 };
