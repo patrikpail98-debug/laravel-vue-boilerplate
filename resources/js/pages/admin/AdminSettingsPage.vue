@@ -40,6 +40,53 @@
                     </div>
                 </div>
 
+                <!-- Reservation Payment Settings Card -->
+                <div class="p-6 bg-base-200 rounded-box mb-8">
+                    <h2 class="text-xl font-semibold mb-6">Platobné údaje pre rezervácie</h2>
+                    <div class="space-y-4">
+                        <div class="form-control">
+                            <label for="org_name" class="label">
+                                <span class="label-text">Názov organizácie</span>
+                            </label>
+                            <input
+                                id="org_name"
+                                v-model="settings['org.name']"
+                                type="text"
+                                class="input input-bordered w-full"
+                            />
+                        </div>
+                        <div class="form-control">
+                            <label for="org_iban" class="label">
+                                <span class="label-text">IBAN</span>
+                            </label>
+                            <input
+                                id="org_iban"
+                                v-model="settings['org.iban']"
+                                type="text"
+                                placeholder="SK00 0000 0000 0000 0000 0000"
+                                class="input input-bordered w-full"
+                            />
+                        </div>
+                        <div class="form-control">
+                            <label for="org_bank_name" class="label">
+                                <span class="label-text">Názov banky (voliteľné)</span>
+                            </label>
+                            <input
+                                id="org_bank_name"
+                                v-model="settings['org.bank_name']"
+                                type="text"
+                                class="input input-bordered w-full"
+                            />
+                        </div>
+                    </div>
+                    <div class="mt-6 flex justify-end">
+                        <button @click="saveSettings" class="btn btn-primary" :disabled="isSaving">
+                            <span v-if="isSaving" class="loading loading-spinner"></span>
+                            Save
+                        </button>
+                    </div>
+                </div>
+
                 <!-- System Actions Card -->
                 <div class="p-6 bg-base-200 rounded-box">
                     <h2 class="text-xl font-semibold mb-6">System actions</h2>
@@ -143,6 +190,9 @@ import {showErrorToast, showSuccessToast} from "../../constants/toast.js";
 const settings = ref({
     'auth.registrations.enabled': false,
     'media.upload.max_size_kb': 2048,
+    'org.name': '',
+    'org.iban': '',
+    'org.bank_name': '',
 });
 const isSaving = ref(false);
 

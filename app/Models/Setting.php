@@ -13,6 +13,9 @@ class Setting extends Model
 
     const string REG_ENABLED_KEY = 'auth.registrations.enabled';
     const string UPLOAD_MAX_SIZE_KEY = 'media.upload.max_size_kb';
+    const string ORG_NAME_KEY = 'org.name';
+    const string ORG_IBAN_KEY = 'org.iban';
+    const string ORG_BANK_NAME_KEY = 'org.bank_name';
 
     /**
      * The attributes that are mass assignable.

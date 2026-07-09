@@ -39,6 +39,9 @@ class SettingsController extends Controller
             'settings' => 'required|array',
             'settings.auth\.registrations\.enabled' => 'sometimes|boolean',
             'settings.media\.upload\.max_size_kb' => 'sometimes|integer|min:100',
+            'settings.org\.name' => 'sometimes|string|max:255',
+            'settings.org\.iban' => 'sometimes|string|max:34',
+            'settings.org\.bank_name' => 'sometimes|nullable|string|max:255',
         ]);
 
         if ($validator->fails()) {

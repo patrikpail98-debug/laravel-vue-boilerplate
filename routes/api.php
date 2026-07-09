@@ -1,8 +1,14 @@
 <?php
 
+use App\Http\Controllers\Admin\AreaController as AdminAreaController;
+use App\Http\Controllers\Admin\PlaygroundController as AdminPlaygroundController;
+use App\Http\Controllers\Admin\ReservationController as AdminReservationController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\AreaController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ForgotPasswordController;
+use App\Http\Controllers\PlaygroundController;
+use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\TwoFactorAuthController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -18,6 +24,24 @@ Route::prefix('auth')->middleware(['throttle:api'])->group(function () {
         ->middleware(['throttle:5,60']); // 5 attempts per hour
     Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
     Route::post('/reset-password', [ForgotPasswordController::class, 'reset'])->name('password.update');
+});
+
+// Public reservation booking (guest checkout, login stays optional)
+Route::middleware(['throttle:api'])->group(function () {
+    Route::prefix('areas')->group(function () {
+        Route::get('/', [AreaController::class, 'index']);
+        Route::get('/{area}', [AreaController::class, 'show']);
+    });
+
+    Route::prefix('playgrounds')->group(function () {
+        Route::get('/{playground}/availability', [PlaygroundController::class, 'availability']);
+    });
+
+    Route::prefix('reservations')->group(function () {
+        Route::post('/', [ReservationController::class, 'store'])
+            ->middleware(['throttle:10,60']); // 10 attempts per hour
+        Route::post('/{id}/verify/{token}', [ReservationController::class, 'verify']);
+    });
 });
 
 Route::middleware(['auth:sanctum', 'throttle:api', 'verified'])->group(function () {
@@ -65,6 +89,26 @@ Route::middleware(['auth:sanctum', 'throttle:api', 'verified'])->group(function 
         // Editor-specific routes
         Route::middleware('permission:manage_content')->group(function () {
 
+        });
+
+        Route::prefix('facilities')->middleware('permission:manage_facilities')->group(function () {
+            Route::get('areas', [AdminAreaController::class, 'index']);
+            Route::post('areas', [AdminAreaController::class, 'store']);
+            Route::put('areas/{area}', [AdminAreaController::class, 'update']);
+            Route::delete('areas/{area}', [AdminAreaController::class, 'destroy']);
+
+            Route::get('playgrounds', [AdminPlaygroundController::class, 'index']);
+            Route::post('playgrounds', [AdminPlaygroundController::class, 'store']);
+            Route::put('playgrounds/{playground}', [AdminPlaygroundController::class, 'update']);
+            Route::delete('playgrounds/{playground}', [AdminPlaygroundController::class, 'destroy']);
+        });
+
+        Route::prefix('reservations')->middleware('permission:manage_reservations')->group(function () {
+            Route::get('/', [AdminReservationController::class, 'index']);
+            Route::put('/{reservation}/approve', [AdminReservationController::class, 'approve']);
+            Route::put('/{reservation}/reject', [AdminReservationController::class, 'reject']);
+            Route::put('/{reservation}/cancel', [AdminReservationController::class, 'cancel']);
+            Route::post('/{reservation}/resend-payment-email', [AdminReservationController::class, 'resendPaymentEmail']);
         });
     });
 });

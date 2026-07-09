@@ -19,6 +19,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'manage_settings' => 'App settings management',
             'view_admin' => 'View admin dashboard',
             'manage_content' => 'Manage user created content',
+            'manage_facilities' => 'Manage areas & playgrounds',
+            'manage_reservations' => 'Manage reservations',
         ];
 
         foreach ($permissions as $name => $display_name) {

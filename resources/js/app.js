@@ -45,6 +45,24 @@ const routes = [
         component: () => import('./pages/NotFoundPage.vue')
     },
     {
+        path: '/rezervacia',
+        name: 'reservations.areas',
+        component: () => import('./pages/AreasPage.vue'),
+        meta: {public: true}
+    },
+    {
+        path: '/rezervacia/potvrdenie/:id/:token',
+        name: 'reservations.verify',
+        component: () => import('./pages/ReservationVerificationHandlerPage.vue'),
+        meta: {public: true}
+    },
+    {
+        path: '/rezervacia/:playgroundId',
+        name: 'reservations.booking',
+        component: () => import('./pages/BookingPage.vue'),
+        meta: {public: true}
+    },
+    {
         path: '/login/2fa',
         name: 'login.2fa',
         component: () => import('./pages/TwoFactorChallengePage.vue'),
@@ -97,6 +115,24 @@ const routes = [
                 meta: {
                     title: 'Settings',
                     permissions: ['manage_settings']
+                }
+            },
+            {
+                path: 'facilities',
+                name: 'admin-facilities',
+                component: () => import('./pages/admin/AdminFacilitiesPage.vue'),
+                meta: {
+                    title: 'Areály a ihriská',
+                    permissions: ['manage_facilities']
+                }
+            },
+            {
+                path: 'reservations',
+                name: 'admin-reservations',
+                component: () => import('./pages/admin/AdminReservationsPage.vue'),
+                meta: {
+                    title: 'Rezervácie',
+                    permissions: ['manage_reservations']
                 }
             }
         ]

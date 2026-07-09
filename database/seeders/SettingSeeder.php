@@ -23,5 +23,19 @@ class SettingSeeder extends Seeder
             ['key' => 'media.upload.max_size_kb'],
             ['value' => '5120']
         );
+
+        // Organization settings (used for reservation payment slips/emails)
+        Setting::updateOrCreate(
+            ['key' => Setting::ORG_NAME_KEY],
+            ['value' => 'Mestská časť Bratislava-Karlova Ves']
+        );
+        Setting::updateOrCreate(
+            ['key' => Setting::ORG_IBAN_KEY],
+            ['value' => '']
+        );
+        Setting::updateOrCreate(
+            ['key' => Setting::ORG_BANK_NAME_KEY],
+            ['value' => '']
+        );
     }
 }
