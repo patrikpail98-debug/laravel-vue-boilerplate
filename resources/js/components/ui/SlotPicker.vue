@@ -127,10 +127,14 @@ const slots = computed(() => {
         const start = new Date(y, m - 1, d, 0, minutes, 0, 0);
         const hh = String(start.getHours()).padStart(2, '0');
         const mm = String(start.getMinutes()).padStart(2, '0');
+        // Plain local wall-clock key (no UTC conversion) - must match the
+        // backend's "Y-m-d\TH:i" format exactly, otherwise already-booked
+        // slots silently fail to match and appear clickable.
+        const iso = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}T${hh}:${mm}`;
         list.push({
-            iso: start.toISOString(),
+            iso,
             label: `${hh}:${mm}`,
-            booked: bookedIso.value.includes(start.toISOString()),
+            booked: bookedIso.value.includes(iso),
             past: start < now,
         });
     }

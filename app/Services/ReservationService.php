@@ -19,7 +19,13 @@ class ReservationService
      * Returns the list of 30-minute slot start times for the given day that are
      * already taken by an active reservation on the given playground.
      *
-     * @return array<int, string> ISO datetime strings of booked slot starts
+     * Keys are plain wall-clock "Y-m-d\TH:i" strings (no timezone offset) so
+     * they compare equal to the slot keys the frontend builds from local date
+     * parts - reservations are stored/compared as naive local times throughout
+     * this app, so introducing real UTC/offset conversion here would make
+     * already-booked slots silently fail to match and appear bookable.
+     *
+     * @return array<int, string>
      */
     public function getBookedSlots(Playground $playground, Carbon $date): array
     {
@@ -41,7 +47,7 @@ class ReservationService
 
             $slot = $reservation->start_time->clone();
             while ($slot->lt($reservation->end_time)) {
-                $booked[] = $slot->toIso8601String();
+                $booked[] = $slot->format('Y-m-d\TH:i');
                 $slot->addMinutes(self::SLOT_MINUTES);
             }
         }
