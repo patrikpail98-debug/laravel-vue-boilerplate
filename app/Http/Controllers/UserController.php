@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Reservation;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\CacheKeyService;
@@ -42,6 +43,20 @@ class UserController extends Controller
             }),
             'permissions' => $user->getAllPermissions()
         ]);
+    }
+
+    /**
+     * Reservations belonging to the authenticated user (shown on their /user profile).
+     */
+    public function myReservations(Request $request): JsonResponse
+    {
+        $reservations = Reservation::query()
+            ->where('user_id', $request->user()->id)
+            ->with('playground.area')
+            ->orderByDesc('created_at')
+            ->get();
+
+        return $this->successResponse($reservations);
     }
 
     public function index(): JsonResponse

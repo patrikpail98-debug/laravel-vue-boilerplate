@@ -125,6 +125,68 @@ class ReservationService
         return $start->format('H:i') >= $hours['opens_at'] && $end->format('H:i') <= $hours['closes_at'];
     }
 
+    /**
+     * Per-day summary (closed / fully booked) for every day from today through
+     * the playground's booking horizon, computed with a single query so the
+     * frontend can grey out whole days in the date picker up front instead of
+     * only disabling individual slots after the user picks a date.
+     *
+     * @return array<int, array{date: string, closed: bool, fully_booked: bool}>
+     */
+    public function getHorizonDaySummaries(Playground $playground): array
+    {
+        $today = Carbon::today();
+        $maxDate = $this->getMaxBookableDate($playground);
+
+        $reservations = $playground->reservations()
+            ->whereIn('status', Reservation::ACTIVE_STATUSES)
+            ->where('start_time', '<', $maxDate->clone()->endOfDay())
+            ->where('end_time', '>', $today)
+            ->get(['start_time', 'end_time', 'status', 'created_at']);
+
+        $bookedCountByDate = [];
+
+        foreach ($reservations as $reservation) {
+            if ($reservation->isExpiredHold()) {
+                continue;
+            }
+
+            $slot = $reservation->start_time->clone();
+            while ($slot->lt($reservation->end_time)) {
+                $dateKey = $slot->toDateString();
+                $bookedCountByDate[$dateKey] = ($bookedCountByDate[$dateKey] ?? 0) + 1;
+                $slot->addMinutes(self::SLOT_MINUTES);
+            }
+        }
+
+        $summaries = [];
+        $date = $today->clone();
+
+        while ($date->lte($maxDate)) {
+            $hours = $playground->openingHoursFor($date);
+            $closed = $hours !== null && (!empty($hours['is_closed']) || empty($hours['opens_at']) || empty($hours['closes_at']));
+            $fullyBooked = false;
+
+            if (!$closed && $hours !== null) {
+                [$openHour, $openMinute] = array_map('intval', explode(':', $hours['opens_at']));
+                [$closeHour, $closeMinute] = array_map('intval', explode(':', $hours['closes_at']));
+                $totalSlots = (($closeHour * 60 + $closeMinute) - ($openHour * 60 + $openMinute)) / self::SLOT_MINUTES;
+                $bookedCount = $bookedCountByDate[$date->toDateString()] ?? 0;
+                $fullyBooked = $totalSlots > 0 && $bookedCount >= $totalSlots;
+            }
+
+            $summaries[] = [
+                'date' => $date->toDateString(),
+                'closed' => $closed,
+                'fully_booked' => $fullyBooked,
+            ];
+
+            $date->addDay();
+        }
+
+        return $summaries;
+    }
+
     public function hasOverlap(Playground $playground, Carbon $start, Carbon $end, ?int $excludeReservationId = null): bool
     {
         $reservations = $playground->reservations()

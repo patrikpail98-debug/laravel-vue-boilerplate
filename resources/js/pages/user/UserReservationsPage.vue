@@ -1,0 +1,93 @@
+<template>
+    <div class="p-6 bg-base-100 rounded-box shadow-md">
+        <h1 class="text-2xl font-bold text-primary mb-6">Moje rezervácie</h1>
+
+        <div v-if="loading" class="flex justify-center py-16">
+            <span class="loading loading-spinner loading-lg"></span>
+        </div>
+
+        <div v-else class="overflow-x-auto">
+            <table class="table w-full">
+                <thead>
+                <tr>
+                    <th class="bg-base-200">Ihrisko</th>
+                    <th class="bg-base-200">Termín</th>
+                    <th class="bg-base-200">Suma</th>
+                    <th class="bg-base-200">VS</th>
+                    <th class="bg-base-200">Stav</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr v-for="reservation in reservations" :key="reservation.id">
+                    <td>
+                        <div class="font-bold">{{ reservation.playground?.name }}</div>
+                        <div class="text-xs text-base-content/60">{{ reservation.playground?.area?.name }}</div>
+                    </td>
+                    <td>{{ formatRange(reservation.start_time, reservation.end_time) }}</td>
+                    <td>{{ Number(reservation.total_price).toFixed(2) }} &euro;</td>
+                    <td>{{ reservation.variable_symbol }}</td>
+                    <td>
+                        <span class="badge" :class="statusBadgeClass(reservation.status)">{{ statusLabel(reservation.status) }}</span>
+                        <p v-if="reservation.admin_note" class="text-xs text-base-content/60 mt-1">{{ reservation.admin_note }}</p>
+                    </td>
+                </tr>
+                <tr v-if="!reservations.length">
+                    <td colspan="5" class="text-center text-base-content/50 py-8">Zatiaľ nemáte žiadne rezervácie.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-6">
+            <router-link to="/rezervacia" class="btn btn-primary">Vytvoriť novú rezerváciu</router-link>
+        </div>
+    </div>
+</template>
+
+<script setup>
+import {onMounted, ref} from 'vue';
+import 'notyf/notyf.min.css';
+import {showErrorToast} from '../../constants/toast.js';
+import http from '../../http.js';
+
+const reservations = ref([]);
+const loading = ref(true);
+
+const statuses = [
+    {value: 'unverified', label: 'Čaká na overenie e-mailu'},
+    {value: 'pending_approval', label: 'Čaká na platbu'},
+    {value: 'approved', label: 'Schválené'},
+    {value: 'rejected', label: 'Zamietnuté'},
+    {value: 'cancelled', label: 'Zrušené'},
+];
+
+const statusLabel = (value) => statuses.find(s => s.value === value)?.label ?? value;
+
+const statusBadgeClass = (status) => ({
+    unverified: 'badge-ghost',
+    pending_approval: 'badge-warning',
+    approved: 'badge-success',
+    rejected: 'badge-error',
+    cancelled: 'badge-error badge-outline',
+}[status] ?? 'badge-ghost');
+
+const formatRange = (start, end) => {
+    const s = new Date(start);
+    const e = new Date(end);
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${pad(s.getDate())}.${pad(s.getMonth() + 1)}.${s.getFullYear()} ${pad(s.getHours())}:${pad(s.getMinutes())}–${pad(e.getHours())}:${pad(e.getMinutes())}`;
+};
+
+onMounted(async () => {
+    try {
+        const response = await http.request('/api/user/reservations');
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message ?? 'Nepodarilo sa načítať rezervácie.');
+        reservations.value = data;
+    } catch (error) {
+        showErrorToast(error.message ?? 'Nepodarilo sa načítať rezervácie.');
+    } finally {
+        loading.value = false;
+    }
+});
+</script>

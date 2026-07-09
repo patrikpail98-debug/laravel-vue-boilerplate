@@ -29,7 +29,7 @@ class CustomVerifyEmail extends Notification implements ShouldQueue
         $verificationUrl = $this->verificationUrl($notifiable);
 
         return (new MailMessage)
-            ->subject('Verify Email Address')
+            ->subject('Overte svoju e-mailovú adresu')
             ->view('emails.custom_verify_email', ['url' => $verificationUrl, 'user' => $notifiable]);
     }
 

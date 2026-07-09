@@ -68,7 +68,7 @@ const login = async () => {
         } else if (result?.verify_email) {
             router.push({name: 'verification.notice', params: {email: form.value.email}});
         } else {
-            router.push('/admin');
+            router.push(authStore.hasPermission('view_admin') ? '/admin' : '/user');
         }
     } catch (error) {
         showErrorToast(error.message ?? 'Chyba pri prihlasovaní.');

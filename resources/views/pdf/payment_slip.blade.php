@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <title>Platobný doklad</title>
     <style>
-        body { font-family: sans-serif; color: #222; font-size: 13px; }
+        /* DejaVu Sans (bundled with dompdf) is used instead of the default core
+           PDF font because Helvetica/"sans-serif" cannot render Slovak diacritics
+           (č, š, ž, ľ, ô, ä, ...) - they'd otherwise show up as missing/garbled glyphs. */
+        body { font-family: 'DejaVu Sans', sans-serif; color: #222; font-size: 13px; }
         .header { text-align: center; color: #003366; margin-bottom: 24px; }
         .header h1 { font-size: 18px; margin: 0 0 4px; }
         .header p { margin: 0; color: #555; }

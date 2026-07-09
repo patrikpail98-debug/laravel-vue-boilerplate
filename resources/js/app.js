@@ -106,20 +106,20 @@ const routes = [
     {
         path: '/admin',
         component: () => import('./components/layout/AdminLayout.vue'),
-        meta: {requiresAuth: true, requiresVerify: true},
+        meta: {requiresAuth: true, requiresVerify: true, permissions: ['view_admin']},
         children: [
             {
                 path: '',
                 name: 'admin-dashboard',
                 component: () => import('./pages/admin/DashboardPage.vue'),
-                meta: {title: 'Dashboard'}
+                meta: {title: 'Prehľad'}
             },
             {
                 path: 'users',
                 name: 'admin-users',
                 component: () => import('./pages/admin/UsersPage.vue'),
                 meta: {
-                    title: 'User management',
+                    title: 'Správa používateľov',
                     permissions: ['manage_users']
                 }
             },
@@ -128,7 +128,7 @@ const routes = [
                 name: 'AdminMyProfilePage',
                 component: () => import('./pages/admin/AdminMyProfile.vue'),
                 meta: {
-                    title: 'My profile'
+                    title: 'Môj profil'
                 }
             },
             {
@@ -136,7 +136,7 @@ const routes = [
                 name: 'AdminSettingsPage',
                 component: () => import('./pages/admin/AdminSettingsPage.vue'),
                 meta: {
-                    title: 'Settings',
+                    title: 'Nastavenia',
                     permissions: ['manage_settings']
                 }
             },
@@ -157,6 +157,25 @@ const routes = [
                     title: 'Rezervácie',
                     permissions: ['manage_reservations']
                 }
+            }
+        ]
+    },
+    {
+        path: '/user',
+        component: () => import('./components/layout/UserLayout.vue'),
+        meta: {requiresAuth: true, requiresVerify: true},
+        children: [
+            {
+                path: '',
+                name: 'user-profile',
+                component: () => import('./pages/admin/AdminMyProfile.vue'),
+                meta: {title: 'Môj profil'}
+            },
+            {
+                path: 'reservations',
+                name: 'user-reservations',
+                component: () => import('./pages/user/UserReservationsPage.vue'),
+                meta: {title: 'Moje rezervácie'}
             }
         ]
     },
@@ -209,6 +228,11 @@ router.beforeEach(async (to, from, next) => {
         );
 
         if (!hasPermission) {
+            // A logged-in user without admin access lands on their own
+            // profile instead of a bare 404 when they try /admin/*.
+            if (to.path.startsWith('/admin')) {
+                return next({name: 'user-profile'});
+            }
             return next({name: 'not-found'});
         }
     }

@@ -4,7 +4,9 @@
         <div class="flex gap-2 overflow-x-auto pb-2 mb-4 date-range-picker">
             <button v-for="day in days" :key="day.iso" type="button"
                     class="flex flex-col items-center justify-center rounded-box px-3 py-2 min-w-16 border"
-                    :class="day.iso === selectedDate ? 'bg-primary text-primary-content border-primary' : 'border-base-300 hover:bg-base-200'"
+                    :class="dayClass(day)"
+                    :disabled="isDayUnavailable(day.iso)"
+                    :title="isDayUnavailable(day.iso) ? (dayStatus[day.iso]?.closed ? 'Zatvorené' : 'Obsadené') : null"
                     @click="selectDate(day.iso)">
                 <span class="text-xs uppercase">{{ day.weekday }}</span>
                 <span class="calendar-day font-semibold" :class="{today: day.isToday}">{{ day.dayNumber }}</span>
@@ -67,10 +69,23 @@ const days = ref([]);
 const selectedDate = ref(null);
 const bookedIso = ref([]);
 const dayOpeningHours = ref(null); // {is_closed, opens_at: 'HH:MM', closes_at: 'HH:MM'} | null
+const dayStatus = ref({}); // { 'YYYY-MM-DD': {closed, fully_booked} }
 const loading = ref(false);
 const selection = ref([]); // array of slot ISO strings, contiguous, ascending
 
 const isClosedToday = computed(() => Boolean(dayOpeningHours.value?.is_closed));
+
+const isDayUnavailable = (iso) => {
+    const status = dayStatus.value[iso];
+    return Boolean(status?.closed || status?.fully_booked);
+};
+
+const dayClass = (day) => {
+    if (isDayUnavailable(day.iso)) {
+        return 'bg-base-300 text-base-content/40 border-base-300 cursor-not-allowed';
+    }
+    return day.iso === selectedDate.value ? 'bg-primary text-primary-content border-primary' : 'border-base-300 hover:bg-base-200';
+};
 
 const buildDays = () => {
     const list = [];
@@ -134,6 +149,8 @@ const slotClass = (slot) => {
 };
 
 const selectDate = async (iso) => {
+    if (isDayUnavailable(iso)) return;
+
     selectedDate.value = iso;
     selection.value = [];
     emitSelection();
@@ -155,6 +172,20 @@ const fetchAvailability = async () => {
         showErrorToast(error.message ?? 'Nepodarilo sa načítať dostupné termíny.');
     } finally {
         loading.value = false;
+    }
+};
+
+const fetchDayAvailability = async () => {
+    try {
+        const response = await http.request(`/api/playgrounds/${props.playgroundId}/day-availability`);
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.message ?? 'Nepodarilo sa načítať dostupnosť termínov.');
+        }
+        dayStatus.value = Object.fromEntries(data.map(day => [day.date, day]));
+    } catch (error) {
+        // Non-fatal: individual slots still get disabled once a date is selected.
+        console.error('Failed to load day availability', error);
     }
 };
 
@@ -229,13 +260,20 @@ const toLocalIso = (date) => {
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:00`;
 };
 
-watch(() => props.playgroundId, () => {
+const firstAvailableDayIso = () => {
+    const found = days.value.find(day => !isDayUnavailable(day.iso));
+    return found ? found.iso : days.value[0]?.iso;
+};
+
+watch(() => props.playgroundId, async () => {
     buildDays();
-    selectDate(days.value[0].iso);
+    await fetchDayAvailability();
+    selectDate(firstAvailableDayIso());
 });
 
-onMounted(() => {
+onMounted(async () => {
     buildDays();
-    selectDate(days.value[0].iso);
+    await fetchDayAvailability();
+    selectDate(firstAvailableDayIso());
 });
 </script>

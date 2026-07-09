@@ -27,6 +27,19 @@ class PlaygroundController extends Controller
     }
 
     /**
+     * Per-day closed/fully-booked summary for the whole booking horizon, used
+     * to grey out whole days in the date picker before the visitor picks one.
+     */
+    public function dayAvailability(Playground $playground): JsonResponse
+    {
+        if (!$playground->is_active) {
+            return $this->errorResponse(['message' => 'Toto ihrisko nie je dostupné.'], 404);
+        }
+
+        return $this->successResponse(ReservationService::instance()->getHorizonDaySummaries($playground));
+    }
+
+    /**
      * Booked slots for a given playground/day, plus the booking rules the
      * frontend needs to render the slot picker (price, max duration, horizon,
      * opening hours for that specific date).

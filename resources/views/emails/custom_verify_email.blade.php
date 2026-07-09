@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Email verification</title>
+    <title>Overenie e-mailu</title>
     <style>
         /* A simple reset */
         body, h1, p, a { margin: 0; padding: 0; font-family: sans-serif; }
@@ -45,18 +45,18 @@
 <body>
 <div class="container">
     <div class="content">
-        <h1 class="header">Thanks for registering!</h1>
-        <p>Hello, {{ $user->name }},</p>
-        <p style="margin-top: 16px;">Please click the button below to verify your email address and complete your registration.</p>
+        <h1 class="header">Ďakujeme za registráciu!</h1>
+        <p>Dobrý deň, {{ $user->name }},</p>
+        <p style="margin-top: 16px;">Pred pokračovaním prosím overte svoju e-mailovú adresu kliknutím na tlačidlo nižšie a dokončite tak registráciu.</p>
 
-        <a href="{{ $url }}" class="button">Verify email</a>
+        <a href="{{ $url }}" class="button">Overiť e-mail</a>
 
-        <p>If you did not register on our website, please ignore this email.</p>
+        <p>Ak ste sa na našej stránke neregistrovali, tento e-mail jednoducho ignorujte.</p>
 
-        <p style="margin-top: 16px;">Best regards,<br>App Name</p>
+        <p style="margin-top: 16px;">S pozdravom,<br>Mestská časť Bratislava-Karlova Ves</p>
 
         <div class="footer">
-            <p>If you have any issues with the button, please copy and paste the following link into your browser:</p>
+            <p>Ak tlačidlo nefunguje, skopírujte a vložte nasledujúci odkaz do prehliadača:</p>
             <p style="word-break: break-all; margin-top: 8px;"><a href="{{ $url }}">{{ $url }}</a></p>
         </div>
     </div>

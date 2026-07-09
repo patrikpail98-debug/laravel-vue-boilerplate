@@ -40,7 +40,7 @@ const verifyCode = async () => {
     loading.value = true;
     try {
         await authStore.verifyTfa(code.value);
-        router.push('/admin');
+        router.push(authStore.hasPermission('view_admin') ? '/admin' : '/user');
     } catch (error) {
         alert('Neplatný kód.');
     } finally {

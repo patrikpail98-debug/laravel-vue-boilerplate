@@ -46,7 +46,7 @@ class CustomPasswordResetNotification extends Notification implements ShouldQueu
         $resetUrl = url(config('app.url').'/reset-password/'.$this->token.'?email='.urlencode($notifiable->getEmailForPasswordReset()));
 
         return (new MailMessage)
-            ->subject('Request to reset your password')
+            ->subject('Žiadosť o obnovenie hesla')
             ->view('emails.custom_password_reset', ['url' => $resetUrl, 'user' => $notifiable]);
     }
 

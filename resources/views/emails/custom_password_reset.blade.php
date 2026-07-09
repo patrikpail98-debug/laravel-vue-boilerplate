@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Password reset</title>
+    <title>Obnovenie hesla</title>
     <style>
         body, h1, p, a { margin: 0; padding: 0; font-family: sans-serif; box-sizing: border-box; }
         .button {
@@ -45,19 +45,19 @@
 <body>
 <div class="container">
     <div class="content">
-        <h1 class="header">Request for password reset</h1>
-        <p>Hello, {{ $user->name }},</p>
-        <p style="margin-top: 16px;">We received a request to reset your password.</p>
+        <h1 class="header">Žiadosť o obnovenie hesla</h1>
+        <p>Dobrý deň, {{ $user->name }},</p>
+        <p style="margin-top: 16px;">Prijali sme žiadosť o obnovenie Vášho hesla.</p>
 
-        <a href="{{ $url }}" class="button">Reset password</a>
+        <a href="{{ $url }}" class="button">Obnoviť heslo</a>
 
-        <p>This link will expire in 15 minutes.</p>
-        <p style="margin-top: 16px;">If you did not request a password reset, please ignore this email.</p>
+        <p>Platnosť tohto odkazu vyprší o 15 minút.</p>
+        <p style="margin-top: 16px;">Ak ste o obnovenie hesla nežiadali, tento e-mail jednoducho ignorujte.</p>
 
-        <p style="margin-top: 16px;">Best regards,<br>App Name</p>
+        <p style="margin-top: 16px;">S pozdravom,<br>Mestská časť Bratislava-Karlova Ves</p>
 
         <div class="footer">
-            <p>If you have any issues with the button, please copy and paste the following link into your browser:</p>
+            <p>Ak tlačidlo nefunguje, skopírujte a vložte nasledujúci odkaz do prehliadača:</p>
             <p style="word-break: break-all; margin-top: 8px;"><a href="{{ $url }}">{{ $url }}</a></p>
         </div>
     </div>

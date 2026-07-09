@@ -36,6 +36,7 @@ Route::middleware(['throttle:api'])->group(function () {
 
     Route::prefix('playgrounds')->group(function () {
         Route::get('/{playground}', [PlaygroundController::class, 'show']);
+        Route::get('/{playground}/day-availability', [PlaygroundController::class, 'dayAvailability']);
         Route::get('/{playground}/availability', [PlaygroundController::class, 'availability']);
     });
 
@@ -59,6 +60,7 @@ Route::middleware(['auth:sanctum', 'throttle:api', 'verified'])->group(function 
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [UserController::class, 'getAuthUser']);
     Route::put('/user/password', [UserController::class, 'updatePassword']);
+    Route::get('/user/reservations', [UserController::class, 'myReservations']);
 
     // Admin routes
     Route::prefix('admin')->middleware('role:admin,editor')->group(function () {

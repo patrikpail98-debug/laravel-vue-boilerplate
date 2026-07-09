@@ -66,6 +66,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'display_name' => 'User',
             'description' => 'Simple user'
         ]);
-        $userRole->syncPermissions(['view_admin']);
+        // Plain users land on /user (their profile + reservations), not the
+        // admin panel, so they don't get 'view_admin' like admin/editor do.
+        $userRole->syncPermissions([]);
     }
 }
