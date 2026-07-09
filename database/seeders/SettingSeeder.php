@@ -37,5 +37,31 @@ class SettingSeeder extends Seeder
             ['key' => Setting::ORG_BANK_NAME_KEY],
             ['value' => '']
         );
+
+        // Contact settings (public footer / contact page)
+        Setting::updateOrCreate(
+            ['key' => Setting::CONTACT_ADDRESS_KEY],
+            ['value' => 'Nám. sv. Františka 8, 842 17 Bratislava-Karlova Ves']
+        );
+        Setting::updateOrCreate(
+            ['key' => Setting::CONTACT_PHONE_KEY],
+            ['value' => '']
+        );
+        Setting::updateOrCreate(
+            ['key' => Setting::CONTACT_EMAIL_KEY],
+            ['value' => '']
+        );
+        Setting::updateOrCreate(
+            ['key' => Setting::CONTACT_HOURS_KEY],
+            ['value' => '']
+        );
+        Setting::updateOrCreate(
+            ['key' => Setting::CONTACT_LATITUDE_KEY],
+            ['value' => '']
+        );
+        Setting::updateOrCreate(
+            ['key' => Setting::CONTACT_LONGITUDE_KEY],
+            ['value' => '']
+        );
     }
 }

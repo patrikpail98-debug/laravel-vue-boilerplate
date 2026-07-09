@@ -87,6 +87,90 @@
                     </div>
                 </div>
 
+                <!-- Contact Settings Card -->
+                <div class="p-6 bg-base-200 rounded-box mb-8">
+                    <h2 class="text-xl font-semibold mb-6">Kontaktné údaje</h2>
+                    <div class="space-y-4">
+                        <div class="form-control">
+                            <label for="contact_address" class="label">
+                                <span class="label-text">Adresa</span>
+                            </label>
+                            <input
+                                id="contact_address"
+                                v-model="settings['contact.address']"
+                                type="text"
+                                class="input input-bordered w-full"
+                            />
+                        </div>
+                        <div class="form-control">
+                            <label for="contact_phone" class="label">
+                                <span class="label-text">Telefón</span>
+                            </label>
+                            <input
+                                id="contact_phone"
+                                v-model="settings['contact.phone']"
+                                type="text"
+                                class="input input-bordered w-full"
+                            />
+                        </div>
+                        <div class="form-control">
+                            <label for="contact_email" class="label">
+                                <span class="label-text">E-mail</span>
+                            </label>
+                            <input
+                                id="contact_email"
+                                v-model="settings['contact.email']"
+                                type="email"
+                                class="input input-bordered w-full"
+                            />
+                        </div>
+                        <div class="form-control">
+                            <label for="contact_hours" class="label">
+                                <span class="label-text">Úradné hodiny</span>
+                            </label>
+                            <input
+                                id="contact_hours"
+                                v-model="settings['contact.hours']"
+                                type="text"
+                                placeholder="Po-Pi: 8:00 - 16:00"
+                                class="input input-bordered w-full"
+                            />
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="form-control">
+                                <label for="contact_latitude" class="label">
+                                    <span class="label-text">Súradnice úradu – latitude</span>
+                                </label>
+                                <input
+                                    id="contact_latitude"
+                                    v-model="settings['contact.latitude']"
+                                    type="text"
+                                    placeholder="48.1717"
+                                    class="input input-bordered w-full"
+                                />
+                            </div>
+                            <div class="form-control">
+                                <label for="contact_longitude" class="label">
+                                    <span class="label-text">Súradnice úradu – longitude</span>
+                                </label>
+                                <input
+                                    id="contact_longitude"
+                                    v-model="settings['contact.longitude']"
+                                    type="text"
+                                    placeholder="17.0574"
+                                    class="input input-bordered w-full"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-6 flex justify-end">
+                        <button @click="saveSettings" class="btn btn-primary" :disabled="isSaving">
+                            <span v-if="isSaving" class="loading loading-spinner"></span>
+                            Save
+                        </button>
+                    </div>
+                </div>
+
                 <!-- System Actions Card -->
                 <div class="p-6 bg-base-200 rounded-box">
                     <h2 class="text-xl font-semibold mb-6">System actions</h2>
@@ -193,6 +277,12 @@ const settings = ref({
     'org.name': '',
     'org.iban': '',
     'org.bank_name': '',
+    'contact.address': '',
+    'contact.phone': '',
+    'contact.email': '',
+    'contact.hours': '',
+    'contact.latitude': '',
+    'contact.longitude': '',
 });
 const isSaving = ref(false);
 

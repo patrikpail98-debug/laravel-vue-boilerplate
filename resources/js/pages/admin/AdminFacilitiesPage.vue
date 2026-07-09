@@ -56,6 +56,7 @@
                 <table class="table w-full">
                     <thead>
                     <tr>
+                        <th class="bg-base-200">Foto</th>
                         <th class="bg-base-200">Názov</th>
                         <th class="bg-base-200">Areál</th>
                         <th class="bg-base-200">Cena / 30 min</th>
@@ -67,6 +68,12 @@
                     </thead>
                     <tbody>
                     <tr v-for="playground in playgrounds" :key="playground.id">
+                        <td>
+                            <div class="w-12 h-12 rounded bg-base-200 overflow-hidden flex items-center justify-center">
+                                <img v-if="playground.image_url" :src="playground.image_url" :alt="playground.name" class="w-full h-full object-cover"/>
+                                <span v-else class="text-xs text-base-content/40">—</span>
+                            </div>
+                        </td>
                         <td class="font-bold">{{ playground.name }}</td>
                         <td>{{ playground.area?.name }}</td>
                         <td>{{ Number(playground.price_per_30min).toFixed(2) }} &euro;</td>
@@ -87,7 +94,7 @@
                         </td>
                     </tr>
                     <tr v-if="!playgrounds.length">
-                        <td colspan="7" class="text-center text-base-content/50 py-8">Žiadne ihriská.</td>
+                        <td colspan="8" class="text-center text-base-content/50 py-8">Žiadne ihriská.</td>
                     </tr>
                     </tbody>
                 </table>
@@ -154,6 +161,17 @@
                         <legend class="fieldset-legend">Rezervovať dopredu (dni)</legend>
                         <input type="number" min="1" class="input input-bordered w-full" v-model.number="playgroundForm.max_horizon_days" required/>
                     </fieldset>
+                    <div class="grid grid-cols-2 gap-4">
+                        <fieldset class="fieldset">
+                            <legend class="fieldset-legend">Zemepisná šírka (latitude)</legend>
+                            <input type="number" step="0.0000001" class="input input-bordered w-full" v-model.number="playgroundForm.latitude" placeholder="48.1717"/>
+                        </fieldset>
+                        <fieldset class="fieldset">
+                            <legend class="fieldset-legend">Zemepisná dĺžka (longitude)</legend>
+                            <input type="number" step="0.0000001" class="input input-bordered w-full" v-model.number="playgroundForm.longitude" placeholder="17.0574"/>
+                        </fieldset>
+                    </div>
+                    <p class="text-xs text-base-content/60 -mt-2">Súradnice určujú polohu ihriska na mape športovísk. Nájdete ich napr. kliknutím pravým tlačidlom na miesto v OpenStreetMap/Google Maps.</p>
                     <label class="flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" class="checkbox" v-model="playgroundForm.is_active"/>
                         Aktívne (viditeľné na rezerváciu)
@@ -167,6 +185,29 @@
                         </button>
                     </div>
                 </form>
+
+                <div v-if="isEditingPlayground" class="mt-6 pt-6 border-t border-base-300">
+                    <h4 class="font-semibold mb-3">Obrázok ihriska</h4>
+                    <div class="flex items-center gap-4">
+                        <div class="w-24 h-24 rounded bg-base-200 overflow-hidden flex items-center justify-center shrink-0">
+                            <img v-if="editingPlaygroundImageUrl" :src="editingPlaygroundImageUrl" :alt="playgroundForm.name" class="w-full h-full object-cover"/>
+                            <span v-else class="text-xs text-base-content/40">Bez fotky</span>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <input ref="imageInput" type="file" accept="image/png,image/jpeg,image/webp" class="file-input file-input-bordered file-input-sm"
+                                   @change="onImageFileSelected"/>
+                            <div class="flex gap-2">
+                                <button type="button" class="btn btn-sm btn-primary" :disabled="!selectedImageFile || isUploadingImage" @click="uploadPlaygroundImage">
+                                    <span v-if="isUploadingImage" class="loading loading-spinner loading-xs"></span>
+                                    Nahrať obrázok
+                                </button>
+                                <button v-if="editingPlaygroundImageUrl" type="button" class="btn btn-sm btn-ghost text-error" :disabled="isUploadingImage" @click="removePlaygroundImage">
+                                    Odstrániť
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </dialog>
 
@@ -272,7 +313,10 @@ const playgroundForm = ref({
     max_duration_minutes: 120,
     max_horizon_days: 14,
     is_active: true,
+    latitude: null,
+    longitude: null,
 });
+const editingPlaygroundImageUrl = ref(null);
 
 const openCreatePlaygroundModal = () => {
     playgroundForm.value = {
@@ -283,7 +327,10 @@ const openCreatePlaygroundModal = () => {
         max_duration_minutes: 120,
         max_horizon_days: 14,
         is_active: true,
+        latitude: null,
+        longitude: null,
     };
+    editingPlaygroundImageUrl.value = null;
     isEditingPlayground.value = false;
     showPlaygroundModal.value = true;
 };
@@ -297,7 +344,10 @@ const openEditPlaygroundModal = (playground) => {
         max_duration_minutes: playground.max_duration_minutes,
         max_horizon_days: playground.max_horizon_days,
         is_active: playground.is_active,
+        latitude: playground.latitude !== null ? Number(playground.latitude) : null,
+        longitude: playground.longitude !== null ? Number(playground.longitude) : null,
     };
+    editingPlaygroundImageUrl.value = playground.image_url ?? null;
     isEditingPlayground.value = true;
     showPlaygroundModal.value = true;
 };
@@ -308,10 +358,18 @@ const submitPlaygroundForm = async () => {
         const url = isEditingPlayground.value
             ? `/api/admin/facilities/playgrounds/${playgroundForm.value.id}`
             : '/api/admin/facilities/playgrounds';
+        const payload = {
+            ...playgroundForm.value,
+            // Empty number inputs come through as '' (not null) - normalize before sending,
+            // otherwise the backend's `numeric` rule rejects the request.
+            latitude: playgroundForm.value.latitude === '' ? null : playgroundForm.value.latitude,
+            longitude: playgroundForm.value.longitude === '' ? null : playgroundForm.value.longitude,
+        };
+
         const response = await http.request(url, {
             method: isEditingPlayground.value ? 'PUT' : 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(playgroundForm.value),
+            body: JSON.stringify(payload),
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.message ?? 'Uloženie ihriska zlyhalo.');
@@ -323,6 +381,61 @@ const submitPlaygroundForm = async () => {
         showErrorToast(error.message ?? 'Uloženie ihriska zlyhalo.');
     } finally {
         isSubmittingPlayground.value = false;
+    }
+};
+
+// --- Playground image upload ---
+const imageInput = ref(null);
+const selectedImageFile = ref(null);
+const isUploadingImage = ref(false);
+
+const onImageFileSelected = (event) => {
+    selectedImageFile.value = event.target.files[0] ?? null;
+};
+
+const uploadPlaygroundImage = async () => {
+    if (!selectedImageFile.value || !playgroundForm.value.id) return;
+
+    isUploadingImage.value = true;
+    try {
+        const formData = new FormData();
+        formData.append('image', selectedImageFile.value);
+
+        const response = await http.request(`/api/admin/facilities/playgrounds/${playgroundForm.value.id}/image`, {
+            method: 'POST',
+            body: formData,
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message ?? 'Nahratie obrázka zlyhalo.');
+
+        editingPlaygroundImageUrl.value = data.image_url;
+        selectedImageFile.value = null;
+        if (imageInput.value) imageInput.value.value = '';
+        showSuccessToast('Obrázok bol nahratý.');
+        await refreshAll();
+    } catch (error) {
+        showErrorToast(error.message ?? 'Nahratie obrázka zlyhalo.');
+    } finally {
+        isUploadingImage.value = false;
+    }
+};
+
+const removePlaygroundImage = async () => {
+    if (!playgroundForm.value.id) return;
+
+    isUploadingImage.value = true;
+    try {
+        const response = await http.request(`/api/admin/facilities/playgrounds/${playgroundForm.value.id}/image`, {method: 'DELETE'});
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message ?? 'Odstránenie obrázka zlyhalo.');
+
+        editingPlaygroundImageUrl.value = null;
+        showSuccessToast('Obrázok bol odstránený.');
+        await refreshAll();
+    } catch (error) {
+        showErrorToast(error.message ?? 'Odstránenie obrázka zlyhalo.');
+    } finally {
+        isUploadingImage.value = false;
     }
 };
 

@@ -94,7 +94,8 @@
                                 class="h-4 w-4 text-secondary focus:ring-secondary border-gray-300 rounded"
                             >
                             <label for="terms" class="ml-2 block text-sm text-gray-700">
-                                I agree with <a href="#" class="text-primary hover:underline"> terms</a>
+                                Súhlasím s <router-link to="/podmienky-pouzivania" class="text-primary hover:underline">podmienkami používania</router-link>
+                                a <router-link to="/ochrana-osobnych-udajov" class="text-primary hover:underline">ochranou osobných údajov</router-link>
                             </label>
                         </div>
                         <p v-if="errors.terms" class="text-sm text-red-600">{{ errors.terms }}</p>

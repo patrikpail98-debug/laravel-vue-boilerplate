@@ -8,6 +8,7 @@ use App\Http\Controllers\AreaController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\PlaygroundController;
+use App\Http\Controllers\PublicSettingsController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\TwoFactorAuthController;
 use App\Http\Controllers\UserController;
@@ -42,6 +43,8 @@ Route::middleware(['throttle:api'])->group(function () {
             ->middleware(['throttle:10,60']); // 10 attempts per hour
         Route::post('/{id}/verify/{token}', [ReservationController::class, 'verify']);
     });
+
+    Route::get('/public-settings', [PublicSettingsController::class, 'index']);
 });
 
 Route::middleware(['auth:sanctum', 'throttle:api', 'verified'])->group(function () {
@@ -101,6 +104,8 @@ Route::middleware(['auth:sanctum', 'throttle:api', 'verified'])->group(function 
             Route::post('playgrounds', [AdminPlaygroundController::class, 'store']);
             Route::put('playgrounds/{playground}', [AdminPlaygroundController::class, 'update']);
             Route::delete('playgrounds/{playground}', [AdminPlaygroundController::class, 'destroy']);
+            Route::post('playgrounds/{playground}/image', [AdminPlaygroundController::class, 'uploadImage']);
+            Route::delete('playgrounds/{playground}/image', [AdminPlaygroundController::class, 'deleteImage']);
         });
 
         Route::prefix('reservations')->middleware('permission:manage_reservations')->group(function () {

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * class Playground
@@ -17,6 +18,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $max_horizon_days
  * @property int $max_duration_minutes
  * @property bool $is_active
+ * @property string|null $image_path
+ * @property float|null $latitude
+ * @property float|null $longitude
  */
 class Playground extends Model
 {
@@ -29,6 +33,13 @@ class Playground extends Model
         'max_horizon_days',
         'max_duration_minutes',
         'is_active',
+        'image_path',
+        'latitude',
+        'longitude',
+    ];
+
+    protected $appends = [
+        'image_url',
     ];
 
     protected function casts(): array
@@ -38,6 +49,8 @@ class Playground extends Model
             'max_horizon_days' => 'integer',
             'max_duration_minutes' => 'integer',
             'is_active' => 'boolean',
+            'latitude' => 'decimal:7',
+            'longitude' => 'decimal:7',
         ];
     }
 
@@ -49,5 +62,10 @@ class Playground extends Model
     public function reservations(): HasMany
     {
         return $this->hasMany(Reservation::class);
+    }
+
+    public function getImageUrlAttribute(): ?string
+    {
+        return $this->image_path ? Storage::disk('public')->url($this->image_path) : null;
     }
 }

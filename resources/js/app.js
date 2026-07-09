@@ -7,14 +7,7 @@ import HomePage from "./pages/HomePage.vue";
 
 
 const routes = [
-    {path: '/', component: HomePage},
-    {path: '/example', component: HomePage},
-    {
-        path: '/example/:id/:slug',
-        component: HomePage,
-        name: 'example'
-    },
-    { path: '/example', name: 'example', component: HomePage },
+    {path: '/', name: 'home', component: HomePage, meta: {public: true}},
     {
         path: '/login',
         name: 'login',
@@ -60,6 +53,30 @@ const routes = [
         path: '/rezervacia/:playgroundId',
         name: 'reservations.booking',
         component: () => import('./pages/BookingPage.vue'),
+        meta: {public: true}
+    },
+    {
+        path: '/mapa',
+        name: 'map',
+        component: () => import('./pages/MapPage.vue'),
+        meta: {public: true}
+    },
+    {
+        path: '/kontakt',
+        name: 'contact',
+        component: () => import('./pages/ContactPage.vue'),
+        meta: {public: true}
+    },
+    {
+        path: '/ochrana-osobnych-udajov',
+        name: 'gdpr',
+        component: () => import('./pages/GdprPage.vue'),
+        meta: {public: true}
+    },
+    {
+        path: '/podmienky-pouzivania',
+        name: 'terms',
+        component: () => import('./pages/TermsPage.vue'),
         meta: {public: true}
     },
     {
@@ -186,7 +203,7 @@ router.beforeEach(async (to, from, next) => {
         );
 
         if (!hasPermission) {
-            return next({name: 'unauthorized'});
+            return next({name: 'not-found'});
         }
     }
 

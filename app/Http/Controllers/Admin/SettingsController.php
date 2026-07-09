@@ -42,6 +42,15 @@ class SettingsController extends Controller
             'settings.org\.name' => 'sometimes|string|max:255',
             'settings.org\.iban' => 'sometimes|string|max:34',
             'settings.org\.bank_name' => 'sometimes|nullable|string|max:255',
+            'settings.contact\.address' => 'sometimes|nullable|string|max:255',
+            'settings.contact\.phone' => 'sometimes|nullable|string|max:30',
+            'settings.contact\.email' => 'sometimes|nullable|string|max:255',
+            'settings.contact\.hours' => 'sometimes|nullable|string|max:255',
+            // Stored as free-form strings (not `numeric`) so an empty value from the
+            // settings form doesn't fail validation - Laravel's `nullable` rule only
+            // bypasses other rules for an actual null, not an empty string.
+            'settings.contact\.latitude' => 'sometimes|nullable|string|max:50',
+            'settings.contact\.longitude' => 'sometimes|nullable|string|max:50',
         ]);
 
         if ($validator->fails()) {

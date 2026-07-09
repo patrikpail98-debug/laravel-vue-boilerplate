@@ -16,6 +16,26 @@ class Setting extends Model
     const string ORG_NAME_KEY = 'org.name';
     const string ORG_IBAN_KEY = 'org.iban';
     const string ORG_BANK_NAME_KEY = 'org.bank_name';
+    const string CONTACT_ADDRESS_KEY = 'contact.address';
+    const string CONTACT_PHONE_KEY = 'contact.phone';
+    const string CONTACT_EMAIL_KEY = 'contact.email';
+    const string CONTACT_HOURS_KEY = 'contact.hours';
+    const string CONTACT_LATITUDE_KEY = 'contact.latitude';
+    const string CONTACT_LONGITUDE_KEY = 'contact.longitude';
+
+    /**
+     * Setting keys that are safe to expose to unauthenticated visitors
+     * (e.g. for the public footer/contact page). Keep this list minimal.
+     */
+    const array PUBLIC_KEYS = [
+        self::ORG_NAME_KEY,
+        self::CONTACT_ADDRESS_KEY,
+        self::CONTACT_PHONE_KEY,
+        self::CONTACT_EMAIL_KEY,
+        self::CONTACT_HOURS_KEY,
+        self::CONTACT_LATITUDE_KEY,
+        self::CONTACT_LONGITUDE_KEY,
+    ];
 
     /**
      * The attributes that are mass assignable.
