@@ -3,7 +3,7 @@
         <!-- Header -->
         <div class="flex items-center mb-8">
             <Cog6ToothIcon class="w-8 h-8 mr-3 text-primary"/>
-            <h1 class="text-2xl font-bold text-primary">System settings</h1>
+            <h1 class="text-2xl font-bold text-primary">Nastavenia systému</h1>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -11,18 +11,18 @@
             <div>
                 <!-- General Settings Card -->
                 <div class="p-6 bg-base-200 rounded-box mb-8">
-                    <h2 class="text-xl font-semibold mb-6">General settings</h2>
+                    <h2 class="text-xl font-semibold mb-6">Všeobecné nastavenia</h2>
                     <div class="space-y-4">
                         <div class="form-control">
                             <label class="label cursor-pointer">
-                                <span class="label-text">Enable new user registration</span>
+                                <span class="label-text">Povoliť registráciu nových používateľov</span>
                                 <input type="checkbox" class="toggle toggle-primary"
                                        v-model="settings['auth.registrations.enabled']"/>
                             </label>
                         </div>
                         <div class="form-control">
                             <label for="max_upload_size" class="label">
-                                <span class="label-text">Maximum upload size (KB)</span>
+                                <span class="label-text">Maximálna veľkosť nahrávaného súboru (KB)</span>
                             </label>
                             <input
                                 id="max_upload_size"
@@ -35,7 +35,7 @@
                     <div class="mt-6 flex justify-end">
                         <button @click="saveSettings" class="btn btn-primary" :disabled="isSaving">
                             <span v-if="isSaving" class="loading loading-spinner"></span>
-                            Save
+                            Uložiť
                         </button>
                     </div>
                 </div>
@@ -82,7 +82,7 @@
                     <div class="mt-6 flex justify-end">
                         <button @click="saveSettings" class="btn btn-primary" :disabled="isSaving">
                             <span v-if="isSaving" class="loading loading-spinner"></span>
-                            Save
+                            Uložiť
                         </button>
                     </div>
                 </div>
@@ -166,27 +166,27 @@
                     <div class="mt-6 flex justify-end">
                         <button @click="saveSettings" class="btn btn-primary" :disabled="isSaving">
                             <span v-if="isSaving" class="loading loading-spinner"></span>
-                            Save
+                            Uložiť
                         </button>
                     </div>
                 </div>
 
                 <!-- System Actions Card -->
                 <div class="p-6 bg-base-200 rounded-box">
-                    <h2 class="text-xl font-semibold mb-6">System actions</h2>
+                    <h2 class="text-xl font-semibold mb-6">Systémové akcie</h2>
                     <div class="space-y-4">
                         <div class="flex items-center justify-between">
-                            <p class="text-sm">Example command</p>
+                            <p class="text-sm">Príklad príkazu</p>
                             <button @click="runArtisanCommand('app:example')"
                                     class="btn btn-secondary btn-sm"
                                     :disabled="isRunningCommand">
                                 <span v-if="isRunningCommand" class="loading loading-spinner"></span>
-                                Run command
+                                Spustiť príkaz
                             </button>
                         </div>
                     </div>
                     <div v-if="commandOutput" class="mt-4">
-                        <h4 class="font-bold text-sm">Command output:</h4>
+                        <h4 class="font-bold text-sm">Výstup príkazu:</h4>
                         <pre class="bg-base-300 text-xs p-3 rounded-md overflow-x-auto whitespace-pre-wrap">{{
                                 commandOutput
                             }}</pre>
@@ -197,10 +197,10 @@
             <!-- Right Column -->
             <div>
                 <div class="p-6 bg-base-200 rounded-box mb-8">
-                    <h2 class="text-xl font-semibold mb-6">Email settings</h2>
+                    <h2 class="text-xl font-semibold mb-6">Nastavenia e-mailu</h2>
                     <div class="form-control mb-4">
                         <label for="test_email" class="label">
-                            <span class="label-text">Send test email</span>
+                            <span class="label-text">Odoslať testovací e-mail</span>
                         </label>
                         <div class="join w-full">
                             <input
@@ -214,7 +214,7 @@
                             <button @click="sendTestEmail" class="btn btn-secondary join-item"
                                     :disabled="isSendingTestEmail">
                                 <span v-if="isSendingTestEmail" class="loading loading-spinner"></span>
-                                Send
+                                Odoslať
                             </button>
                         </div>
                     </div>
@@ -222,10 +222,10 @@
 
                 <!-- Cache Management Card -->
                 <div class="p-6 bg-base-200 rounded-box">
-                    <h2 class="text-xl font-semibold mb-6">Cache management</h2>
+                    <h2 class="text-xl font-semibold mb-6">Správa cache</h2>
                     <div class="form-control mb-4">
                         <label for="cache_pattern" class="label">
-                            <span class="label-text">Find keys by pattern (eg. `example:*`)</span>
+                            <span class="label-text">Nájsť kľúče podľa vzoru (napr. `example:*`)</span>
                         </label>
                         <div class="join w-full">
                             <input
@@ -239,7 +239,7 @@
                             <button @click="fetchCacheKeys" class="btn btn-secondary join-item"
                                     :disabled="isLoadingKeys">
                                 <span v-if="isLoadingKeys" class="loading loading-spinner"></span>
-                                Search
+                                Hľadať
                             </button>
                         </div>
                     </div>
@@ -249,13 +249,13 @@
                             <li v-for="key in cacheKeys" :key="key">{{ key }}</li>
                         </ul>
                     </div>
-                    <p v-if="searched && cacheKeys.length === 0" class="text-sm text-center my-4">No keys found.</p>
+                    <p v-if="searched && cacheKeys.length === 0" class="text-sm text-center my-4">Žiadne kľúče neboli nájdené.</p>
 
                     <div class="flex justify-end space-x-2">
                         <button @click="flushCache(cachePattern)" class="btn btn-warning btn-sm"
-                                :disabled="!cachePattern || isLoadingKeys">Delete keys
+                                :disabled="!cachePattern || isLoadingKeys">Vymazať kľúče
                         </button>
-                        <button @click="flushCache()" class="btn btn-error btn-sm">Delete all</button>
+                        <button @click="flushCache()" class="btn btn-error btn-sm">Vymazať všetko</button>
                     </div>
                 </div>
             </div>
@@ -301,7 +301,7 @@ const isSendingTestEmail = ref(false);
 
 const sendTestEmail = async () => {
     if (!testEmail.value) {
-        showErrorToast('Please enter an email.');
+        showErrorToast('Zadajte prosím e-mail.');
         return;
     }
 
@@ -317,7 +317,7 @@ const sendTestEmail = async () => {
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.message || 'Error sending test email.');
+            throw new Error(data.message || 'Chyba pri odosielaní testovacieho e-mailu.');
         }
 
         showSuccessToast(data.message);
@@ -337,7 +337,7 @@ const fetchSettings = async () => {
         data['auth.registrations.enabled'] = (data['auth.registrations.enabled'] === '1' || data['auth.registrations.enabled'] === true);
         settings.value = data;
     } catch (error) {
-        showErrorToast('Could not fetch settings.');
+        showErrorToast('Nastavenia sa nepodarilo načítať.');
         console.error(error);
     }
 };
@@ -354,11 +354,11 @@ const saveSettings = async () => {
         });
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(JSON.stringify(errorData.errors) || 'Error saving settings.');
+            throw new Error(JSON.stringify(errorData.errors) || 'Chyba pri ukladaní nastavení.');
         }
-        showSuccessToast('Settings saved.');
+        showSuccessToast('Nastavenia boli uložené.');
     } catch (error) {
-        showErrorToast('Error saving settings: ' + error);
+        showErrorToast('Chyba pri ukladaní nastavení: ' + error);
         console.error(error);
     } finally {
         isSaving.value = false;
@@ -373,7 +373,7 @@ const fetchCacheKeys = async () => {
         const response = await http.request(`/api/admin/settings/cache-keys?pattern=${encodeURIComponent(cachePattern.value)}`);
         cacheKeys.value = await response.json();
     } catch (error) {
-        showErrorToast('Error fetching cache keys.');
+        showErrorToast('Chyba pri načítaní cache kľúčov.');
         console.error(error);
     } finally {
         isLoadingKeys.value = false;
@@ -382,8 +382,8 @@ const fetchCacheKeys = async () => {
 
 const flushCache = async (pattern = null) => {
     const confirmation = pattern
-        ? `Delete keys matching "${pattern}"?`
-        : 'Are you sure you want to delete all cache keys? This action can slow down your application.';
+        ? `Vymazať kľúče zodpovedajúce "${pattern}"?`
+        : 'Naozaj chcete vymazať všetky cache kľúče? Táto akcia môže dočasne spomaliť aplikáciu.';
 
     if (!confirm(confirmation)) return;
 
@@ -404,7 +404,7 @@ const flushCache = async (pattern = null) => {
             cacheKeys.value = [];
         }
     } catch (error) {
-        showErrorToast('Error flushing cache.');
+        showErrorToast('Chyba pri mazaní cache.');
         console.error(error);
     }
 };
@@ -422,9 +422,9 @@ const runArtisanCommand = async (command) => {
         });
         const data = await response.json();
         showSuccessToast(data.message);
-        commandOutput.value = data.output || 'Command output not available.';
+        commandOutput.value = data.output || 'Výstup príkazu nie je dostupný.';
     } catch (error) {
-        showErrorToast('Error running command.');
+        showErrorToast('Chyba pri spúšťaní príkazu.');
         console.error(error);
     } finally {
         isRunningCommand.value = false;

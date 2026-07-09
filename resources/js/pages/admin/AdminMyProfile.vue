@@ -3,22 +3,22 @@
         <!-- Header -->
         <div class="flex items-center mb-8">
             <UserCircleIcon class="w-8 h-8 mr-3 text-primary"/>
-            <h1 class="text-2xl font-bold text-primary">My profile</h1>
+            <h1 class="text-2xl font-bold text-primary">Môj profil</h1>
         </div>
 
         <div class="p-6 bg-base-200 rounded-box mb-6">
-            <h2 class="text-xl font-semibold mb-6">Two-factor authentication (2FA)</h2>
+            <h2 class="text-xl font-semibold mb-6">Dvojfaktorové overenie (2FA)</h2>
 
             <div v-if="!tfaEnabled">
-                <p class="mb-4">Secure your account with two-factor authentication.</p>
+                <p class="mb-4">Zabezpečte si účet pomocou dvojfaktorového overenia.</p>
                 <div class="flex gap-4">
                     <button @click="enableTfaViaApp" class="btn btn-primary" :disabled="tfaLoading">
                         <span v-if="tfaLoading" class="loading loading-spinner"></span>
-                        Use authentication app
+                        Použiť autentifikačnú aplikáciu
                     </button>
                     <button @click="enableTfaViaEmail" class="btn btn-secondary" :disabled="tfaLoading">
                         <span v-if="tfaLoading" class="loading loading-spinner"></span>
-                        Use email
+                        Použiť e-mail
                     </button>
                 </div>
             </div>
@@ -26,28 +26,28 @@
             <div v-else>
                 <div class="alert alert-success mb-4">
                     <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    <span>Two-factor authentication is enabled. You can use it
-                        <strong v-if="tfaMethod === 'app'">with an app</strong>
-                        <strong v-if="tfaMethod === 'email'">with an email</strong>.
+                    <span>Dvojfaktorové overenie je zapnuté. Môžete ho použiť
+                        <strong v-if="tfaMethod === 'app'">cez aplikáciu</strong>
+                        <strong v-if="tfaMethod === 'email'">cez e-mail</strong>.
                     </span>
                 </div>
                 <button @click="disableTFA" class="btn btn-error" :disabled="tfaLoading">
                     <span v-if="tfaLoading" class="loading loading-spinner"></span>
-                    Disable 2FA
+                    Vypnúť 2FA
                 </button>
             </div>
         </div>
 
         <!-- Change Password Card -->
         <div class="p-6 bg-base-200 rounded-box">
-            <h2 class="text-xl font-semibold mb-6">Change password</h2>
+            <h2 class="text-xl font-semibold mb-6">Zmena hesla</h2>
 
             <form @submit.prevent="updatePassword">
                 <div class="space-y-4">
                     <!-- Current Password -->
                     <div class="form-control">
                         <label for="current_password" class="label">
-                            <span class="label-text">Current password</span>
+                            <span class="label-text">Aktuálne heslo</span>
                         </label>
                         <input
                             id="current_password"
@@ -62,13 +62,13 @@
                     <!-- New Password -->
                     <div class="form-control">
                         <label for="password" class="label">
-                            <span class="label-text">New password</span>
+                            <span class="label-text">Nové heslo</span>
                         </label>
                         <input
                             id="password"
                             v-model="form.password"
                             type="password"
-                            placeholder="At least 8 characters, upper/lowercase letters, numbers, symbols"
+                            placeholder="Aspoň 8 znakov, veľké/malé písmená, čísla, symboly"
                             class="input input-bordered w-full"
                             required
                         />
@@ -77,13 +77,13 @@
                     <!-- Confirm New Password -->
                     <div class="form-control">
                         <label for="password_confirmation" class="label">
-                            <span class="label-text">Confirm new password</span>
+                            <span class="label-text">Potvrďte nové heslo</span>
                         </label>
                         <input
                             id="password_confirmation"
                             v-model="form.password_confirmation"
                             type="password"
-                            placeholder="Repeat new password"
+                            placeholder="Zopakujte nové heslo"
                             class="input input-bordered w-full"
                             required
                         />
@@ -99,7 +99,7 @@
                     >
                         <span v-if="isSaving" class="loading loading-spinner"></span>
                         <KeyIcon v-else class="w-5 h-5 mr-2"/>
-                        Change password
+                        Zmeniť heslo
                     </button>
                 </div>
             </form>
@@ -108,20 +108,20 @@
 
     <dialog :class="{'modal-open': showTfaModal}" class="modal">
         <div class="modal-box">
-            <h3 class="font-bold text-lg">Setup two-factor authentication</h3>
-            <p class="py-4">Scan QR code using an app (eg. Google Authenticator).</p>
+            <h3 class="font-bold text-lg">Nastavenie dvojfaktorového overenia</h3>
+            <p class="py-4">Naskenujte QR kód pomocou aplikácie (napr. Google Authenticator).</p>
 
             <div v-html="qrCode" class="bg-white p-4 inline-block rounded-lg shadow-inner"></div>
 
-            <p class="py-4">Then input the code from the app.</p>
+            <p class="py-4">Následne zadajte kód z aplikácie.</p>
 
             <div class="form-control">
                 <input type="text" v-model="tfaCode" placeholder="123456" class="input input-bordered" />
             </div>
 
             <div class="modal-action">
-                <button class="btn btn-ghost" @click="cancelTFA">Cancel</button>
-                <button class="btn btn-primary" @click="confirmTFA" :disabled="tfaLoading">Submit</button>
+                <button class="btn btn-ghost" @click="cancelTFA">Zrušiť</button>
+                <button class="btn btn-primary" @click="confirmTFA" :disabled="tfaLoading">Potvrdiť</button>
             </div>
         </div>
     </dialog>
@@ -151,7 +151,7 @@ const enableTfaViaApp = async () => {
         qrCode.value = data.qr_code_svg;
         showTfaModal.value = true;
     } catch (error) {
-        showErrorToast('Unable to enable 2FA.');
+        showErrorToast('Nepodarilo sa zapnúť 2FA.');
     } finally {
         tfaLoading.value = false;
     }
@@ -162,9 +162,9 @@ const enableTfaViaEmail = async () => {
     try {
         await http.request('/api/user/two-factor-authentication/enable-email', { method: 'POST' });
         await authStore.fetchUser(); // Refresh user state
-        showSuccessToast('2FA enabled via email.');
+        showSuccessToast('2FA bolo zapnuté cez e-mail.');
     } catch (error) {
-        showErrorToast('Unable to enable 2FA.');
+        showErrorToast('Nepodarilo sa zapnúť 2FA.');
     } finally {
         tfaLoading.value = false;
     }
@@ -179,26 +179,26 @@ const confirmTFA = async () => {
             body: JSON.stringify({ code: tfaCode.value }),
         });
         await authStore.fetchUser();
-        showSuccessToast('2FA successfully enabled!');
+        showSuccessToast('2FA bolo úspešne zapnuté!');
         showTfaModal.value = false;
         qrCode.value = '';
         tfaCode.value = '';
     } catch (error) {
-        showErrorToast('Invalid 2FA code.');
+        showErrorToast('Neplatný 2FA kód.');
     } finally {
         tfaLoading.value = false;
     }
 };
 
 const disableTFA = async () => {
-    if (!confirm('Are you sure you want to disable 2FA?')) return;
+    if (!confirm('Naozaj chcete vypnúť 2FA?')) return;
     tfaLoading.value = true;
     try {
         await http.request('/api/user/two-factor-authentication/disable', { method: 'DELETE' });
         await authStore.fetchUser();
-        showSuccessToast('2FA disabled!');
+        showSuccessToast('2FA bolo vypnuté!');
     } catch (error) {
-        showErrorToast('Unable to disable 2FA.');
+        showErrorToast('Nepodarilo sa vypnúť 2FA.');
     } finally {
         tfaLoading.value = false;
     }
@@ -227,7 +227,7 @@ const isSaving = ref(false);
 const updatePassword = async () => {
     // Basic client-side check
     if (form.value.password !== form.value.password_confirmation) {
-        showErrorToast('Passwords do not match.');
+        showErrorToast('Heslá sa nezhodujú.');
         return;
     }
 
@@ -249,14 +249,14 @@ const updatePassword = async () => {
             // Handle validation errors from Laravel
             if (response.status === 422 && data.errors) {
                 const errorMessages = Object.values(data.errors).flat().join(' ');
-                showErrorToast(errorMessages || 'Please fix the validation errors.');
+                showErrorToast(errorMessages || 'Opravte prosím chyby vo formulári.');
             } else {
-                throw new Error(data.message || 'Unable to update password.');
+                throw new Error(data.message || 'Heslo sa nepodarilo zmeniť.');
             }
             return; // Stop execution on validation error
         }
 
-        showSuccessToast(data.message || 'Password updated.');
+        showSuccessToast(data.message || 'Heslo bolo zmenené.');
         // Reset form after successful submission
         form.value.current_password = '';
         form.value.password = '';
@@ -264,7 +264,7 @@ const updatePassword = async () => {
 
     } catch (error) {
         console.error('Error updating password:', error);
-        showErrorToast(error.message || 'Unexpected error.');
+        showErrorToast(error.message || 'Neočakávaná chyba.');
     } finally {
         isSaving.value = false;
     }

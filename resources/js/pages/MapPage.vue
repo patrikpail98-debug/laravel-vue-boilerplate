@@ -37,7 +37,7 @@ onMounted(async () => {
             subtitle: area.name,
             latitude: playground.latitude,
             longitude: playground.longitude,
-            url: `/rezervacia/${playground.id}`,
+            url: `/rezervacia/ihrisko/${playground.id}`,
         })));
     } catch {
         markers.value = [];

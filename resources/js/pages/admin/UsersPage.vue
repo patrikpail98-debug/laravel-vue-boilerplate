@@ -2,14 +2,14 @@
     <div class="p-6 bg-base-100 rounded-box shadow-md">
         <!-- Header with Create User Button -->
         <div class="flex justify-between items-center mb-8">
-            <h1 class="text-2xl font-bold text-primary">User management</h1>
+            <h1 class="text-2xl font-bold text-primary">Správa používateľov</h1>
             <button
                 @click="openCreateModal"
                 class="btn btn-primary"
                 v-if="authStore.hasPermission('manage_users')"
             >
                 <PlusCircleIcon class="w-5 h-5 mr-2"/>
-                Create user
+                Vytvoriť používateľa
             </button>
         </div>
 
@@ -20,7 +20,7 @@
                     <input
                         type="text"
                         v-model="searchQuery"
-                        placeholder="Find users..."
+                        placeholder="Hľadať používateľov..."
                         class="input input-bordered join-item w-full"
                     />
                     <button class="btn join-item bg-base-300">
@@ -30,7 +30,7 @@
             </div>
             <div>
                 <select v-model="roleFilter" class="select select-bordered w-full">
-                    <option value="">All roles</option>
+                    <option value="">Všetky role</option>
                     <option v-for="role in roles" :key="role.id" :value="role.name">
                         {{ role.display_name }}
                     </option>
@@ -43,13 +43,13 @@
             <table class="table w-full">
                 <thead>
                 <tr>
-                    <th class="bg-base-200">Name</th>
-                    <th class="bg-base-200">Email</th>
-                    <th class="bg-base-200">Roles</th>
-                    <th class="bg-base-200">Last login</th>
-                    <th class="bg-base-200">Is blocked</th>
-                    <th class="bg-base-200">Permissions</th>
-                    <th class="bg-base-200 text-right">Actions</th>
+                    <th class="bg-base-200">Meno</th>
+                    <th class="bg-base-200">E-mail</th>
+                    <th class="bg-base-200">Role</th>
+                    <th class="bg-base-200">Posledné prihlásenie</th>
+                    <th class="bg-base-200">Blokovaný</th>
+                    <th class="bg-base-200">Oprávnenia</th>
+                    <th class="bg-base-200 text-right">Akcie</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -81,7 +81,7 @@
                         </div>
                     </td>
                     <td>{{ formatDate(user.updated_at) }}</td>
-                    <td>{{ user.is_blocked ? 'Yes' : 'No' }}</td>
+                    <td>{{ user.is_blocked ? 'Áno' : 'Nie' }}</td>
                     <td>
                         <div class="flex flex-wrap gap-1">
                 <span
@@ -103,19 +103,19 @@
                                 <li>
                                     <a @click="openEditModal(user)">
                                         <PencilIcon class="w-4 h-4"/>
-                                        Edit
+                                        Upraviť
                                     </a>
                                 </li>
                                 <li>
                                     <a @click="openPasswordResetModal(user)">
                                         <KeyIcon class="w-4 h-4"/>
-                                        Change password
+                                        Zmeniť heslo
                                     </a>
                                 </li>
                                 <li v-if="user.id !== authStore.user?.id">
                                     <a @click="confirmDeleteUser(user)" class="text-error">
                                         <TrashIcon class="w-4 h-4"/>
-                                        Delete
+                                        Vymazať
                                     </a>
                                 </li>
                             </ul>
@@ -136,7 +136,7 @@
                 >
                     «
                 </button>
-                <button class="join-item btn">Page {{ currentPage }}</button>
+                <button class="join-item btn">Stránka {{ currentPage }}</button>
                 <button
                     class="join-item btn"
                     :class="{ 'btn-disabled': users.length < perPage }"
@@ -152,12 +152,12 @@
             <div class="flex justify-center mb-4">
                 <UserGroupIcon class="w-16 h-16 text-gray-300"/>
             </div>
-            <h3 class="text-lg font-medium text-gray-700 mb-2">No users</h3>
+            <h3 class="text-lg font-medium text-gray-700 mb-2">Žiadni používatelia</h3>
             <p class="text-gray-500 mb-6">
-                No users found.
+                Neboli nájdení žiadni používatelia.
             </p>
             <button @click="resetFilters" class="btn btn-outline">
-                Reset Filters
+                Zrušiť filtre
             </button>
         </div>
 
@@ -171,19 +171,19 @@
                     ✕
                 </button>
                 <h3 class="font-bold text-lg mb-6">
-                    {{ isEditing ? 'Edit user' : 'Create user' }}
+                    {{ isEditing ? 'Upraviť používateľa' : 'Vytvoriť používateľa' }}
                 </h3>
 
                 <form @submit.prevent="submitUserForm">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="form-control">
                             <label class="label">
-                                <span class="label-text">Full name</span>
+                                <span class="label-text">Meno a priezvisko</span>
                             </label>
                             <input
                                 type="text"
                                 v-model="userForm.name"
-                                placeholder="Enter full name"
+                                placeholder="Zadajte meno a priezvisko"
                                 class="input input-bordered w-full"
                                 required
                             />
@@ -191,12 +191,12 @@
 
                         <div class="form-control">
                             <label class="label">
-                                <span class="label-text">Email address</span>
+                                <span class="label-text">E-mailová adresa</span>
                             </label>
                             <input
                                 type="email"
                                 v-model="userForm.email"
-                                placeholder="Input email address"
+                                placeholder="Zadajte e-mailovú adresu"
                                 class="input input-bordered w-full"
                                 required
                             />
@@ -204,12 +204,12 @@
 
                         <div v-if="!isEditing" class="form-control">
                             <label class="label">
-                                <span class="label-text">Password</span>
+                                <span class="label-text">Heslo</span>
                             </label>
                             <input
                                 type="password"
                                 v-model="userForm.password"
-                                placeholder="Enter password"
+                                placeholder="Zadajte heslo"
                                 class="input input-bordered w-full"
                                 required
                             />
@@ -217,12 +217,12 @@
 
                         <div v-if="!isEditing" class="form-control">
                             <label class="label">
-                                <span class="label-text">Confirm password</span>
+                                <span class="label-text">Potvrďte heslo</span>
                             </label>
                             <input
                                 type="password"
                                 v-model="userForm.password_confirmation"
-                                placeholder="Confirm password"
+                                placeholder="Potvrďte heslo"
                                 class="input input-bordered w-full"
                                 required
                             />
@@ -230,7 +230,7 @@
 
                         <div class="form-control md:col-span-2">
                             <label class="label">
-                                <span class="label-text">Roles</span>
+                                <span class="label-text">Role</span>
                             </label>
                             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                                 <div
@@ -256,7 +256,7 @@
 
                         <div class="form-control md:col-span-2">
                             <label class="label">
-                                <span class="label-text mb-2">Management</span>
+                                <span class="label-text mb-2">Správa</span>
                             </label>
                             <div class="grid grid-cols-1 gap-3">
                                 <div
@@ -269,8 +269,8 @@
                                         :checked="userForm.is_blocked"
                                     />
                                     <label class="cursor-pointer">
-                                        <span class="font-medium">Is user blocked</span>
-                                        <p class="text-sm text-gray-500">Blocked users cannot log in.</p>
+                                        <span class="font-medium">Používateľ je blokovaný</span>
+                                        <p class="text-sm text-gray-500">Blokovaní používatelia sa nemôžu prihlásiť.</p>
                                     </label>
                                 </div>
                             </div>
@@ -283,7 +283,7 @@
                             class="btn btn-ghost"
                             @click="closeModal"
                         >
-                            Cancel
+                            Zrušiť
                         </button>
                         <button
                             type="submit"
@@ -291,7 +291,7 @@
                             :disabled="isSubmitting"
                         >
                             <span v-if="isSubmitting" class="loading loading-spinner"></span>
-                            {{ isEditing ? 'Update' : 'Create' }}
+                            {{ isEditing ? 'Uložiť' : 'Vytvoriť' }}
                         </button>
                     </div>
                 </form>
@@ -308,18 +308,18 @@
                     ✕
                 </button>
                 <h3 class="font-bold text-lg mb-4">
-                    Change password for {{ selectedUser?.name }}
+                    Zmena hesla pre {{ selectedUser?.name }}
                 </h3>
 
                 <form @submit.prevent="resetPassword">
                     <div class="form-control mb-4">
                         <label class="label">
-                            <span class="label-text">New password</span>
+                            <span class="label-text">Nové heslo</span>
                         </label>
                         <input
                             type="password"
                             v-model="passwordForm.password"
-                            placeholder="Enter new password"
+                            placeholder="Zadajte nové heslo"
                             class="input input-bordered w-full"
                             required
                         />
@@ -327,12 +327,12 @@
 
                     <div class="form-control mb-6">
                         <label class="label">
-                            <span class="label-text">Confirm new password</span>
+                            <span class="label-text">Potvrďte nové heslo</span>
                         </label>
                         <input
                             type="password"
                             v-model="passwordForm.password_confirmation"
-                            placeholder="Confirm new password"
+                            placeholder="Potvrďte nové heslo"
                             class="input input-bordered w-full"
                             required
                         />
@@ -344,7 +344,7 @@
                             class="btn btn-ghost"
                             @click="showPasswordResetModal = false"
                         >
-                            Cancel
+                            Zrušiť
                         </button>
                         <button
                             type="submit"
@@ -352,7 +352,7 @@
                             :disabled="isSubmittingPassword"
                         >
                             <span v-if="isSubmittingPassword" class="loading loading-spinner"></span>
-                            Save password
+                            Uložiť heslo
                         </button>
                     </div>
                 </form>
@@ -368,17 +368,17 @@
                 >
                     ✕
                 </button>
-                <h3 class="font-bold text-lg mb-2">Confirm deletion</h3>
+                <h3 class="font-bold text-lg mb-2">Potvrdiť vymazanie</h3>
                 <p class="py-4">
-                    Really delete user <strong>{{ selectedUser?.name }}</strong>?
-                    This action cannot be undone.
+                    Naozaj vymazať používateľa <strong>{{ selectedUser?.name }}</strong>?
+                    Táto akcia je nevratná.
                 </p>
                 <div class="modal-action">
                     <button
                         class="btn btn-ghost"
                         @click="showDeleteModal = false"
                     >
-                        Cancel
+                        Zrušiť
                     </button>
                     <button
                         class="btn btn-error"
@@ -386,7 +386,7 @@
                         :disabled="isDeleting"
                     >
                         <span v-if="isDeleting" class="loading loading-spinner"></span>
-                        Yes, delete user
+                        Áno, vymazať používateľa
                     </button>
                 </div>
             </div>
@@ -457,13 +457,13 @@ const fetchUsers = async () => {
     try {
         const response = await http.request('/api/admin/user-management');
 
-        if (!response.ok) throw new Error('Failed to fetch users');
+        if (!response.ok) throw new Error('Načítanie používateľov zlyhalo');
 
         const data = await response.json();
         users.value = data.users;
         roles.value = data.roles;
     } catch (error) {
-        showErrorToast('Error fetching users.');
+        showErrorToast('Chyba pri načítaní používateľov.');
         console.error('Error fetching users:', error);
     }
 };
@@ -581,13 +581,13 @@ const submitUserForm = async () => {
             body: JSON.stringify(userForm.value)
         });
 
-        if (!response.ok) throw new Error('Failed to save user');
+        if (!response.ok) throw new Error('Uloženie používateľa zlyhalo');
 
         await fetchUsers();
         showUserModal.value = false;
     } catch (error) {
         console.error('Error saving user:', error);
-        showErrorToast('Error saving user');
+        showErrorToast('Chyba pri ukladaní používateľa');
     } finally {
         isSubmitting.value = false;
     }
@@ -606,13 +606,13 @@ const resetPassword = async () => {
             body: JSON.stringify(passwordForm.value)
         });
 
-        if (!response.ok) throw new Error('Failed to reset password');
+        if (!response.ok) throw new Error('Reset hesla zlyhal');
 
-        showSuccessToast('Password reset successfully');
+        showSuccessToast('Heslo bolo úspešne zmenené');
         showPasswordResetModal.value = false;
     } catch (error) {
         console.error('Error resetting password:', error);
-        showErrorToast('Error resetting password');
+        showErrorToast('Chyba pri zmene hesla');
     } finally {
         isSubmittingPassword.value = false;
     }
@@ -629,13 +629,13 @@ const deleteUser = async () => {
             }
         });
 
-        if (!response.ok) throw new Error('Failed to delete user');
+        if (!response.ok) throw new Error('Vymazanie používateľa zlyhalo');
 
         await fetchUsers();
         showDeleteModal.value = false;
     } catch (error) {
         console.error('Error deleting user:', error);
-        showErrorToast('Error deleting user');
+        showErrorToast('Chyba pri mazaní používateľa');
     } finally {
         isDeleting.value = false;
     }

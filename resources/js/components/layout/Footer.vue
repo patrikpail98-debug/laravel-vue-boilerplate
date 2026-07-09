@@ -2,7 +2,10 @@
     <footer class="bg-base-300 text-base-content mt-auto">
         <div class="max-w-6xl mx-auto px-4 py-10 grid gap-8 sm:grid-cols-3">
             <div>
-                <h2 class="font-bold text-lg mb-2">{{ settings['org.name'] || 'Mestská časť Bratislava-Karlova Ves' }}</h2>
+                <div class="flex items-center gap-3 mb-2">
+                    <img src="/images/erb-karlova-ves.png" alt="Erb Mestskej časti Bratislava-Karlova Ves" class="h-10 w-auto"/>
+                    <h2 class="font-bold text-lg">{{ settings['org.name'] || 'Mestská časť Bratislava-Karlova Ves' }}</h2>
+                </div>
                 <address class="not-italic text-sm space-y-1">
                     <p v-if="settings['contact.address']">{{ settings['contact.address'] }}</p>
                     <p v-if="settings['contact.phone']">
@@ -21,6 +24,7 @@
                     <li><router-link to="/rezervacia" class="link link-hover">Rezervácia športovísk</router-link></li>
                     <li><router-link to="/mapa" class="link link-hover">Mapa športovísk</router-link></li>
                     <li><router-link to="/kontakt" class="link link-hover">Kontakt</router-link></li>
+                    <li><a href="https://www.karlovaves.sk" target="_blank" rel="noopener" class="link link-hover">Hlavná stránka karlovaves.sk</a></li>
                 </ul>
             </nav>
 

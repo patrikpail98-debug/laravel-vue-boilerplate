@@ -35,6 +35,7 @@ Route::middleware(['throttle:api'])->group(function () {
     });
 
     Route::prefix('playgrounds')->group(function () {
+        Route::get('/{playground}', [PlaygroundController::class, 'show']);
         Route::get('/{playground}/availability', [PlaygroundController::class, 'availability']);
     });
 

@@ -21,7 +21,7 @@ export default {
         // Handle 401 Unauthorized responses
         if (response.status === 401 && authStore.isAuthenticated) {
             await authStore.logout();
-            throw new Error('Session expired. Please log in again.');
+            throw new Error('Relácia vypršala. Prihláste sa prosím znova.');
         }
 
         return response;

@@ -16,20 +16,30 @@
         </div>
 
         <template v-else>
-            <div class="grid grid-cols-4 sm:grid-cols-6 gap-2">
-                <button v-for="slot in slots" :key="slot.iso" type="button"
-                        class="btn btn-sm"
-                        :class="slotClass(slot)"
-                        :disabled="slot.booked || slot.past"
-                        @click="toggleSlot(slot)">
-                    {{ slot.label }}
-                </button>
-            </div>
-
-            <p v-if="selection.length" class="mt-4 text-sm">
-                Vybraný termín: <strong>{{ selectionSummary }}</strong>
-                &mdash; cena: <strong>{{ totalPrice.toFixed(2) }} &euro;</strong>
+            <p v-if="isClosedToday" class="text-center text-base-content/60 py-8">
+                V tento deň je ihrisko zatvorené. Vyberte prosím iný dátum.
             </p>
+
+            <template v-else>
+                <p v-if="dayOpeningHours" class="text-sm text-base-content/60 mb-2">
+                    Otváracie hodiny: {{ dayOpeningHours.opens_at }} &ndash; {{ dayOpeningHours.closes_at }}
+                </p>
+
+                <div class="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                    <button v-for="slot in slots" :key="slot.iso" type="button"
+                            class="btn btn-sm"
+                            :class="slotClass(slot)"
+                            :disabled="slot.booked || slot.past"
+                            @click="toggleSlot(slot)">
+                        {{ slot.label }}
+                    </button>
+                </div>
+
+                <p v-if="selection.length" class="mt-4 text-sm">
+                    Vybraný termín: <strong>{{ selectionSummary }}</strong>
+                    &mdash; cena: <strong>{{ totalPrice.toFixed(2) }} &euro;</strong>
+                </p>
+            </template>
         </template>
     </div>
 </template>
@@ -49,14 +59,18 @@ const props = defineProps({
 
 const emit = defineEmits(['update:selection', 'loaded']);
 
-const OPEN_HOUR = 7;
-const CLOSE_HOUR = 22;
+// Fallback window used only when a playground has no opening hours configured at all.
+const FALLBACK_OPEN_HOUR = 7;
+const FALLBACK_CLOSE_HOUR = 22;
 
 const days = ref([]);
 const selectedDate = ref(null);
 const bookedIso = ref([]);
+const dayOpeningHours = ref(null); // {is_closed, opens_at: 'HH:MM', closes_at: 'HH:MM'} | null
 const loading = ref(false);
 const selection = ref([]); // array of slot ISO strings, contiguous, ascending
+
+const isClosedToday = computed(() => Boolean(dayOpeningHours.value?.is_closed));
 
 const buildDays = () => {
     const list = [];
@@ -83,13 +97,18 @@ const toDateKey = (date) => {
 };
 
 const slots = computed(() => {
-    if (!selectedDate.value) return [];
+    if (!selectedDate.value || isClosedToday.value) return [];
 
     const [y, m, d] = selectedDate.value.split('-').map(Number);
     const list = [];
     const now = new Date();
 
-    for (let minutes = OPEN_HOUR * 60; minutes < CLOSE_HOUR * 60; minutes += props.slotMinutes) {
+    const [openHour, openMinute] = (dayOpeningHours.value?.opens_at ?? `${FALLBACK_OPEN_HOUR}:00`).split(':').map(Number);
+    const [closeHour, closeMinute] = (dayOpeningHours.value?.closes_at ?? `${FALLBACK_CLOSE_HOUR}:00`).split(':').map(Number);
+    const startMinutes = openHour * 60 + openMinute;
+    const endMinutes = closeHour * 60 + closeMinute;
+
+    for (let minutes = startMinutes; minutes < endMinutes; minutes += props.slotMinutes) {
         const start = new Date(y, m - 1, d, 0, minutes, 0, 0);
         const hh = String(start.getHours()).padStart(2, '0');
         const mm = String(start.getMinutes()).padStart(2, '0');
@@ -130,6 +149,7 @@ const fetchAvailability = async () => {
             throw new Error(data.message ?? 'Nepodarilo sa načítať dostupné termíny.');
         }
         bookedIso.value = data.booked_slots ?? [];
+        dayOpeningHours.value = data.opening_hours ?? null;
         emit('loaded', data);
     } catch (error) {
         showErrorToast(error.message ?? 'Nepodarilo sa načítať dostupné termíny.');

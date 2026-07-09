@@ -97,9 +97,32 @@ class ReservationService
             throw new InvalidArgumentException('Vybraný termín je už obsadený, zvoľte iný.');
         }
 
+        if (!$this->isWithinOpeningHours($playground, $start, $end)) {
+            throw new InvalidArgumentException('Vybraný termín je mimo otváracích hodín tohto ihriska.');
+        }
+
         $slots = $durationMinutes / self::SLOT_MINUTES;
 
         return round($slots * (float)$playground->price_per_30min, 2);
+    }
+
+    /**
+     * Checks the requested (same-day) window against the playground's weekly
+     * opening hours. A playground with no configured hours is unrestricted.
+     */
+    public function isWithinOpeningHours(Playground $playground, Carbon $start, Carbon $end): bool
+    {
+        $hours = $playground->openingHoursFor($start);
+
+        if ($hours === null) {
+            return true;
+        }
+
+        if (!empty($hours['is_closed']) || empty($hours['opens_at']) || empty($hours['closes_at'])) {
+            return false;
+        }
+
+        return $start->format('H:i') >= $hours['opens_at'] && $end->format('H:i') <= $hours['closes_at'];
     }
 
     public function hasOverlap(Playground $playground, Carbon $start, Carbon $end, ?int $excludeReservationId = null): bool

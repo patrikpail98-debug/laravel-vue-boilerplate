@@ -1,12 +1,12 @@
 <!-- resources/js/pages/admin/DashboardPage.vue -->
 <template>
     <div>
-        <h1 class="text-2xl font-bold mb-6">Admin dashboard</h1>
+        <h1 class="text-2xl font-bold mb-6">Prehľad</h1>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div class="card bg-base-100 shadow">
                 <div class="card-body">
-                    <h2 class="card-title text-primary">Example</h2>
+                    <h2 class="card-title text-primary">Príklad</h2>
                     <p class="text-4xl font-bold">{{ statistics?.example }}</p>
                 </div>
             </div>
@@ -36,7 +36,7 @@ const fetchStatistics = async () => {
             statistics.value = await response.json();
         }
     } catch (error) {
-        showErrorToast('Error fetching statistics.');
+        showErrorToast('Chyba pri načítaní štatistík.');
         console.error('Failed to fetch stats', error);
     }
 };

@@ -14,8 +14,22 @@ class PlaygroundController extends Controller
     use JsonResponseTrait;
 
     /**
+     * Full public detail of a playground, for the facility detail page
+     * (description, price, image, coordinates, weekly opening hours).
+     */
+    public function show(Playground $playground): JsonResponse
+    {
+        if (!$playground->is_active) {
+            return $this->errorResponse(['message' => 'Toto ihrisko nie je dostupné.'], 404);
+        }
+
+        return $this->successResponse($playground->load('area'));
+    }
+
+    /**
      * Booked slots for a given playground/day, plus the booking rules the
-     * frontend needs to render the slot picker (price, max duration, horizon).
+     * frontend needs to render the slot picker (price, max duration, horizon,
+     * opening hours for that specific date).
      */
     public function availability(Request $request, Playground $playground): JsonResponse
     {
@@ -48,6 +62,7 @@ class PlaygroundController extends Controller
             'max_duration_minutes' => $playground->max_duration_minutes,
             'max_horizon_days' => $playground->max_horizon_days,
             'slot_minutes' => ReservationService::SLOT_MINUTES,
+            'opening_hours' => $playground->openingHoursFor($date),
         ]);
     }
 }

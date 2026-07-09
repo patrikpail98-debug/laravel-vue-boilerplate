@@ -150,6 +150,11 @@
                         <input type="text" class="input input-bordered w-full" v-model="playgroundForm.name" required/>
                     </fieldset>
                     <fieldset class="fieldset">
+                        <legend class="fieldset-legend">Popis</legend>
+                        <textarea class="textarea textarea-bordered w-full" rows="3" v-model="playgroundForm.description"
+                                  placeholder="Popis ihriska zobrazený na jeho detailovej stránke"></textarea>
+                    </fieldset>
+                    <fieldset class="fieldset">
                         <legend class="fieldset-legend">Cena za 30 minút (&euro;)</legend>
                         <input type="number" step="0.01" min="0" class="input input-bordered w-full" v-model.number="playgroundForm.price_per_30min" required/>
                     </fieldset>
@@ -172,6 +177,25 @@
                         </fieldset>
                     </div>
                     <p class="text-xs text-base-content/60 -mt-2">Súradnice určujú polohu ihriska na mape športovísk. Nájdete ich napr. kliknutím pravým tlačidlom na miesto v OpenStreetMap/Google Maps.</p>
+
+                    <fieldset class="fieldset">
+                        <legend class="fieldset-legend">Otváracie hodiny</legend>
+                        <div class="space-y-2">
+                            <div v-for="day in weekDays" :key="day.key" class="flex items-center gap-3">
+                                <span class="w-24 text-sm shrink-0">{{ day.label }}</span>
+                                <label class="flex items-center gap-1 text-sm shrink-0">
+                                    <input type="checkbox" class="checkbox checkbox-sm" v-model="playgroundForm.opening_hours[day.key].is_closed"/>
+                                    Zatvorené
+                                </label>
+                                <template v-if="!playgroundForm.opening_hours[day.key].is_closed">
+                                    <input type="time" class="input input-bordered input-sm" v-model="playgroundForm.opening_hours[day.key].opens_at"/>
+                                    <span class="text-sm">&ndash;</span>
+                                    <input type="time" class="input input-bordered input-sm" v-model="playgroundForm.opening_hours[day.key].closes_at"/>
+                                </template>
+                            </div>
+                        </div>
+                    </fieldset>
+
                     <label class="flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" class="checkbox" v-model="playgroundForm.is_active"/>
                         Aktívne (viditeľné na rezerváciu)
@@ -238,6 +262,24 @@ import http from '../../http.js';
 
 const areas = ref([]);
 const playgrounds = ref([]);
+
+const weekDays = [
+    {key: 'mon', label: 'Pondelok'},
+    {key: 'tue', label: 'Utorok'},
+    {key: 'wed', label: 'Streda'},
+    {key: 'thu', label: 'Štvrtok'},
+    {key: 'fri', label: 'Piatok'},
+    {key: 'sat', label: 'Sobota'},
+    {key: 'sun', label: 'Nedeľa'},
+];
+
+const buildDefaultOpeningHours = () => Object.fromEntries(
+    weekDays.map(day => [day.key, {
+        is_closed: day.key === 'sat' || day.key === 'sun',
+        opens_at: '08:00',
+        closes_at: '20:00',
+    }])
+);
 
 const fetchAreas = async () => {
     const response = await http.request('/api/admin/facilities/areas');
@@ -309,12 +351,14 @@ const playgroundForm = ref({
     id: null,
     area_id: null,
     name: '',
+    description: '',
     price_per_30min: 0,
     max_duration_minutes: 120,
     max_horizon_days: 14,
     is_active: true,
     latitude: null,
     longitude: null,
+    opening_hours: buildDefaultOpeningHours(),
 });
 const editingPlaygroundImageUrl = ref(null);
 
@@ -323,12 +367,14 @@ const openCreatePlaygroundModal = () => {
         id: null,
         area_id: areas.value[0]?.id ?? null,
         name: '',
+        description: '',
         price_per_30min: 0,
         max_duration_minutes: 120,
         max_horizon_days: 14,
         is_active: true,
         latitude: null,
         longitude: null,
+        opening_hours: buildDefaultOpeningHours(),
     };
     editingPlaygroundImageUrl.value = null;
     isEditingPlayground.value = false;
@@ -336,16 +382,27 @@ const openCreatePlaygroundModal = () => {
 };
 
 const openEditPlaygroundModal = (playground) => {
+    const openingHours = buildDefaultOpeningHours();
+    if (playground.opening_hours) {
+        weekDays.forEach(day => {
+            if (playground.opening_hours[day.key]) {
+                openingHours[day.key] = {...openingHours[day.key], ...playground.opening_hours[day.key]};
+            }
+        });
+    }
+
     playgroundForm.value = {
         id: playground.id,
         area_id: playground.area_id,
         name: playground.name,
+        description: playground.description ?? '',
         price_per_30min: Number(playground.price_per_30min),
         max_duration_minutes: playground.max_duration_minutes,
         max_horizon_days: playground.max_horizon_days,
         is_active: playground.is_active,
         latitude: playground.latitude !== null ? Number(playground.latitude) : null,
         longitude: playground.longitude !== null ? Number(playground.longitude) : null,
+        opening_hours: openingHours,
     };
     editingPlaygroundImageUrl.value = playground.image_url ?? null;
     isEditingPlayground.value = true;
@@ -364,6 +421,13 @@ const submitPlaygroundForm = async () => {
             // otherwise the backend's `numeric` rule rejects the request.
             latitude: playgroundForm.value.latitude === '' ? null : playgroundForm.value.latitude,
             longitude: playgroundForm.value.longitude === '' ? null : playgroundForm.value.longitude,
+            opening_hours: Object.fromEntries(
+                Object.entries(playgroundForm.value.opening_hours).map(([key, day]) => [key, {
+                    is_closed: day.is_closed,
+                    opens_at: day.is_closed || !day.opens_at ? null : day.opens_at,
+                    closes_at: day.is_closed || !day.closes_at ? null : day.closes_at,
+                }])
+            ),
         };
 
         const response = await http.request(url, {

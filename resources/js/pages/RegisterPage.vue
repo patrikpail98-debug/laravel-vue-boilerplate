@@ -2,11 +2,11 @@
     <div class="min-h-screen flex items-center justify-center">
         <div class="w-full max-w-md p-6">
             <div class="bg-white rounded-xl shadow-xl p-8">
-                <h2 class="card-title text-2xl mb-6">Create an account</h2>
+                <h2 class="card-title text-2xl mb-6">Vytvoriť účet</h2>
                 <form @submit.prevent="register">
                     <div class="space-y-4">
                         <div>
-                            <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Full name</label>
+                            <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Meno a priezvisko</label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
@@ -17,7 +17,7 @@
                                     id="name"
                                     v-model="form.name"
                                     type="text"
-                                    placeholder="Enter full name"
+                                    placeholder="Zadajte meno a priezvisko"
                                     class="pl-10 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-secondary transition"
                                     :class="{ 'border-red-500': errors.name }"
                                 >
@@ -26,7 +26,7 @@
                         </div>
 
                         <div>
-                            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
@@ -38,7 +38,7 @@
                                     id="email"
                                     v-model="form.email"
                                     type="email"
-                                    placeholder="Enter email address"
+                                    placeholder="Zadajte e-mailovú adresu"
                                     class="pl-10 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-secondary transition"
                                     :class="{ 'border-red-500': errors.email }"
                                 >
@@ -47,7 +47,7 @@
                         </div>
 
                         <div>
-                            <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                            <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Heslo</label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
@@ -58,7 +58,7 @@
                                     id="password"
                                     v-model="form.password"
                                     type="password"
-                                    placeholder="Enter password"
+                                    placeholder="Zadajte heslo"
                                     class="pl-10 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-secondary transition"
                                     :class="{ 'border-red-500': errors.password }"
                                 >
@@ -67,7 +67,7 @@
                         </div>
 
                         <div>
-                            <label for="password_confirmation" class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                            <label for="password_confirmation" class="block text-sm font-medium text-gray-700 mb-1">Potvrďte heslo</label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
@@ -78,7 +78,7 @@
                                     id="password_confirmation"
                                     v-model="form.password_confirmation"
                                     type="password"
-                                    placeholder="Confirm password"
+                                    placeholder="Potvrďte heslo"
                                     class="pl-10 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-secondary transition"
                                     :class="{ 'border-red-500': errors.password_confirmation }"
                                 >
@@ -113,7 +113,7 @@
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
                 </span>
-                                Create account
+                                Vytvoriť účet
                             </button>
                         </div>
                     </div>
@@ -121,9 +121,9 @@
 
                 <div class="mt-6 text-center">
                     <p class="text-sm text-gray-600">
-                        Already have an account?
+                        Už máte účet?
                         <router-link to="/login" class="text-primary font-medium hover:text-primary hover:underline">
-                            Log in
+                            Prihláste sa
                         </router-link>
                     </p>
                 </div>
@@ -131,7 +131,7 @@
 
             <div class="mt-8 text-center">
                 <p class="text-sm text-white opacity-80">
-                    &copy; {{ new Date().getFullYear() }} Example.com. All rights reserved.
+                    &copy; {{ new Date().getFullYear() }} Mestská časť Bratislava-Karlova Ves. Všetky práva vyhradené.
                 </p>
             </div>
         </div>
@@ -171,47 +171,47 @@ const validateForm = () => {
 
     // Name validation
     if (!form.value.name.trim()) {
-        errors.value.name = 'Name is required';
+        errors.value.name = 'Meno je povinné';
         isValid = false;
     } else if (form.value.name.length < 3) {
-        errors.value.name = 'Name must be at least 3 characters';
+        errors.value.name = 'Meno musí mať aspoň 3 znaky';
         isValid = false;
     }
 
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!form.value.email) {
-        errors.value.email = 'Email is required';
+        errors.value.email = 'E-mail je povinný';
         isValid = false;
     } else if (!emailRegex.test(form.value.email)) {
-        errors.value.email = 'Please, enter a valid email';
+        errors.value.email = 'Zadajte platnú e-mailovú adresu';
         isValid = false;
     }
 
     // Password validation
     if (!form.value.password) {
-        errors.value.password = 'Password is required';
+        errors.value.password = 'Heslo je povinné';
         isValid = false;
     } else if (form.value.password.length < 8) {
-        errors.value.password = 'Password must be at least 8 characters';
+        errors.value.password = 'Heslo musí mať aspoň 8 znakov';
         isValid = false;
     } else if (!/[A-Z]/.test(form.value.password)) {
-        errors.value.password = 'Password must contain at least one uppercase letter';
+        errors.value.password = 'Heslo musí obsahovať aspoň jedno veľké písmeno';
         isValid = false;
     } else if (!/[0-9]/.test(form.value.password)) {
-        errors.value.password = 'Password must contain at least one number';
+        errors.value.password = 'Heslo musí obsahovať aspoň jednu číslicu';
         isValid = false;
     }
 
     // Password confirmation
     if (form.value.password !== form.value.password_confirmation) {
-        errors.value.password_confirmation = 'Passwords do not match';
+        errors.value.password_confirmation = 'Heslá sa nezhodujú';
         isValid = false;
     }
 
     // Terms agreement
     if (!form.value.terms) {
-        errors.value.terms = 'You must agree to the terms';
+        errors.value.terms = 'Musíte súhlasiť s podmienkami';
         isValid = false;
     }
 
@@ -248,7 +248,7 @@ const register = async () => {
                 errors.value.password = apiErrors.password[0];
             }
         } else {
-            showErrorToast('Registration failed.');
+            showErrorToast('Registrácia zlyhala.');
         }
     } finally {
         loading.value = false;

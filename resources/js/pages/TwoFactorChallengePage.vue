@@ -2,11 +2,11 @@
     <div class="min-h-screen flex items-center justify-center bg-base-200">
         <div class="card w-full max-w-md bg-base-100 shadow-xl">
             <div class="card-body">
-                <h2 class="card-title text-2xl mb-2">Two-factor authentication</h2>
+                <h2 class="card-title text-2xl mb-2">Dvojfaktorové overenie</h2>
                 <p class="mb-6 text-sm">
-                    Enter the verification code sent to
-                    <strong v-if="authStore.tfaMethod === 'app'">your authentication app</strong>
-                    <strong v-if="authStore.tfaMethod === 'email'">your email address</strong>.
+                    Zadajte overovací kód odoslaný do
+                    <strong v-if="authStore.tfaMethod === 'app'">Vašej autentifikačnej aplikácie</strong>
+                    <strong v-if="authStore.tfaMethod === 'email'">na Vašu e-mailovú adresu</strong>.
                 </p>
                 <form @submit.prevent="verifyCode">
                     <div class="form-control mb-4">
@@ -17,7 +17,7 @@
                     <div class="form-control">
                         <button class="btn btn-block btn-primary" :disabled="loading">
                             <span v-if="loading" class="loading loading-spinner"></span>
-                            Verify
+                            Overiť
                         </button>
                     </div>
                 </form>
@@ -42,7 +42,7 @@ const verifyCode = async () => {
         await authStore.verifyTfa(code.value);
         router.push('/admin');
     } catch (error) {
-        alert('Invalid code.');
+        alert('Neplatný kód.');
     } finally {
         loading.value = false;
     }

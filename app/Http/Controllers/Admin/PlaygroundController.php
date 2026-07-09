@@ -82,12 +82,17 @@ class PlaygroundController extends Controller
         return $request->validate([
             'area_id' => 'required|exists:areas,id',
             'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
             'price_per_30min' => 'required|numeric|min:0',
             'max_horizon_days' => 'required|integer|min:1|max:365',
             'max_duration_minutes' => 'required|integer|min:30|max:1440',
             'is_active' => 'required|boolean',
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
+            'opening_hours' => 'nullable|array',
+            'opening_hours.*.is_closed' => 'sometimes|boolean',
+            'opening_hours.*.opens_at' => 'nullable|date_format:H:i',
+            'opening_hours.*.closes_at' => 'nullable|date_format:H:i',
         ]);
     }
 }

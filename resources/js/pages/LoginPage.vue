@@ -3,11 +3,11 @@
     <div class="min-h-screen flex items-center justify-center bg-base-200">
         <div class="card w-full max-w-md bg-base-100 shadow-xl">
             <div class="card-body">
-                <h2 class="card-title text-2xl mb-6">Login</h2>
+                <h2 class="card-title text-2xl mb-6">Prihlásenie</h2>
                 <form @submit.prevent="login">
                     <div class="form-control mb-4">
                         <fieldset class="fieldset">
-                            <legend class="fieldset-legend">Email</legend>
+                            <legend class="fieldset-legend">E-mail</legend>
                             <input type="email" class="input input-bordered w-full" placeholder=""
                                    v-model="form.email"
                                    required/>
@@ -15,7 +15,7 @@
                     </div>
                     <div class="form-control mb-6">
                         <fieldset class="fieldset">
-                            <legend class="fieldset-legend">Password</legend>
+                            <legend class="fieldset-legend">Heslo</legend>
                             <input type="password" class="input input-bordered w-full" placeholder=""
                                    v-model="form.password"
                                    required/>
@@ -24,19 +24,19 @@
                     <div class="form-control">
                         <button class="btn btn-block btn-primary" :disabled="loading">
                             <span v-if="loading" class="loading loading-spinner"></span>
-                            Log in
+                            Prihlásiť sa
                         </button>
                     </div>
                 </form>
-                <div class="divider">OR</div>
+                <div class="divider">ALEBO</div>
                 <div class="text-center">
                     <p class="text-sm">
-                        Don't have an account?
-                        <router-link to="/register" class="link link-primary">Create one</router-link>
+                        Nemáte účet?
+                        <router-link to="/register" class="link link-primary">Vytvorte si ho</router-link>
                     </p>
                 </div>
                 <div class="text-sm text-center mt-2">
-                    <router-link to="/forgot-password" class="link link-hover link-primary">Forgot password?
+                    <router-link to="/forgot-password" class="link link-hover link-primary">Zabudnuté heslo?
                     </router-link>
                 </div>
             </div>
@@ -71,7 +71,7 @@ const login = async () => {
             router.push('/admin');
         }
     } catch (error) {
-        showErrorToast(error.message ?? 'Error logging in.');
+        showErrorToast(error.message ?? 'Chyba pri prihlasovaní.');
     } finally {
         loading.value = false;
     }

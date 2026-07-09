@@ -2,7 +2,7 @@
     <div class="min-h-screen flex items-center justify-center bg-base-200">
         <div class="card w-full max-w-md bg-base-100 shadow-xl">
             <div class="card-body">
-                <h2 class="card-title text-2xl mb-6">Password reset</h2>
+                <h2 class="card-title text-2xl mb-6">Obnovenie hesla</h2>
 
                 <div v-if="status" class="alert alert-success mb-4">
                     <span>{{ status }}</span>
@@ -13,7 +13,7 @@
                     <input type="hidden" v-model="form.token">
 
                     <div class="form-control mb-4">
-                        <label for="email" class="label"><span class="label-text">Email</span></label>
+                        <label for="email" class="label"><span class="label-text">E-mail</span></label>
                         <input type="email" id="email" v-model="form.email" class="input input-bordered w-full" :class="{'input-error': errors.email}" required readonly>
                         <label class="label" v-if="errors.email">
                             <span class="label-text-alt text-error">{{ errors.email[0] }}</span>
@@ -21,7 +21,7 @@
                     </div>
 
                     <div class="form-control mb-4">
-                        <label for="password" class="label"><span class="label-text">New password</span></label>
+                        <label for="password" class="label"><span class="label-text">Nové heslo</span></label>
                         <input type="password" id="password" v-model="form.password" class="input input-bordered w-full" :class="{'input-error': errors.password}" required>
                         <label class="label" v-if="errors.password">
                             <span class="label-text-alt text-error">{{ errors.password[0] }}</span>
@@ -29,14 +29,14 @@
                     </div>
 
                     <div class="form-control mb-4">
-                        <label for="password_confirmation" class="label"><span class="label-text">Confirm new password</span></label>
+                        <label for="password_confirmation" class="label"><span class="label-text">Potvrďte nové heslo</span></label>
                         <input type="password" id="password_confirmation" v-model="form.password_confirmation" class="input input-bordered w-full" required>
                     </div>
 
                     <div class="form-control">
                         <button class="btn btn-block btn-primary" :disabled="loading">
                             <span v-if="loading" class="loading loading-spinner"></span>
-                            Reset password
+                            Obnoviť heslo
                         </button>
                     </div>
                 </form>
@@ -86,7 +86,7 @@ const handleResetPassword = async () => {
             if (response.status === 422) {
                 errors.value = data.errors || { email: [data.email] };
             } else {
-                showErrorToast(data.message || 'Could not reset password.');
+                showErrorToast(data.message || 'Heslo sa nepodarilo obnoviť.');
             }
         } else {
             status.value = data.message;
@@ -94,7 +94,7 @@ const handleResetPassword = async () => {
             setTimeout(() => router.push('/login'), 2000);
         }
     } catch (err) {
-        showErrorToast('Unexpected error.');
+        showErrorToast('Neočakávaná chyba.');
     } finally {
         loading.value = false;
     }

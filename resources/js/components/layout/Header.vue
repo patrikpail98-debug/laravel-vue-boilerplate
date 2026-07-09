@@ -2,15 +2,19 @@
     <header>
         <div class="navbar bg-primary text-primary-content shadow-md px-4 md:px-8">
             <div class="navbar-start">
-                <router-link to="/" class="btn btn-ghost text-lg normal-case hover:bg-primary-focus px-2">
-                    Karlova Ves <span class="hidden sm:inline">&ndash; Šport</span>
+                <router-link to="/" class="btn btn-ghost text-lg normal-case hover:bg-white/10 px-2 gap-2">
+                    <img src="/images/erb-karlova-ves.png" alt="Erb Mestskej časti Bratislava-Karlova Ves" class="h-9 w-auto"/>
+                    <span class="!text-primary-content">Karlova Ves <span class="hidden sm:inline">&ndash; Šport</span></span>
                 </router-link>
             </div>
 
             <nav aria-label="Hlavná navigácia" class="navbar-center hidden lg:flex">
                 <ul class="menu menu-horizontal px-1 gap-1">
                     <li v-for="item in navItems" :key="item.path">
-                        <router-link :to="item.path" class="rounded-field">{{ item.label }}</router-link>
+                        <router-link :to="item.path"
+                                     class="!text-primary-content font-medium rounded-field hover:!bg-white/15 [&.router-link-exact-active]:!bg-secondary [&.router-link-exact-active]:!text-secondary-content">
+                            {{ item.label }}
+                        </router-link>
                     </li>
                 </ul>
             </nav>
@@ -20,11 +24,11 @@
                     <router-link v-if="authStore.isAdmin" to="/admin" class="btn btn-secondary btn-sm hidden sm:inline-flex">
                         Administrácia
                     </router-link>
-                    <button type="button" class="btn btn-ghost btn-sm" @click="logout">Odhlásiť sa</button>
+                    <button type="button" class="btn btn-ghost btn-sm !text-primary-content hover:!bg-white/15" @click="logout">Odhlásiť sa</button>
                 </template>
                 <router-link v-else to="/login" class="btn btn-secondary btn-sm">Prihlásenie</router-link>
 
-                <button type="button" class="btn btn-ghost btn-square lg:hidden" @click="mobileOpen = !mobileOpen"
+                <button type="button" class="btn btn-ghost btn-square !text-primary-content hover:!bg-white/15 lg:hidden" @click="mobileOpen = !mobileOpen"
                         :aria-expanded="mobileOpen" aria-controls="mobile-menu" aria-label="Otvoriť menu">
                     <Bars3Icon v-if="!mobileOpen" class="w-6 h-6" aria-hidden="true"/>
                     <XMarkIcon v-else class="w-6 h-6" aria-hidden="true"/>
@@ -35,10 +39,11 @@
         <nav v-if="mobileOpen" id="mobile-menu" aria-label="Mobilné menu" class="lg:hidden bg-primary text-primary-content px-4 pb-4">
             <ul class="menu">
                 <li v-for="item in navItems" :key="item.path">
-                    <router-link :to="item.path" @click="mobileOpen = false">{{ item.label }}</router-link>
+                    <router-link :to="item.path" class="!text-primary-content hover:!bg-white/15 [&.router-link-exact-active]:!bg-secondary [&.router-link-exact-active]:!text-secondary-content"
+                                 @click="mobileOpen = false">{{ item.label }}</router-link>
                 </li>
                 <li v-if="authStore.isAuthenticated && authStore.isAdmin">
-                    <router-link to="/admin" @click="mobileOpen = false">Administrácia</router-link>
+                    <router-link to="/admin" class="!text-primary-content hover:!bg-white/15" @click="mobileOpen = false">Administrácia</router-link>
                 </li>
             </ul>
         </nav>

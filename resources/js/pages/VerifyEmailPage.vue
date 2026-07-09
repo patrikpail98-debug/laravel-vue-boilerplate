@@ -2,19 +2,19 @@
     <div class="min-h-screen flex items-center justify-center bg-base-200">
         <div class="card w-full max-w-md bg-base-100 shadow-xl">
             <div class="card-body">
-                <h2 class="card-title text-2xl mb-6">Verify your email</h2>
-                <p class="mb-4">Thank you for registering! Before you continue, please verify your email
-                    address by clicking on the link we just sent you. If you did not receive the email, we will be happy to send you
-                    another one.</p>
+                <h2 class="card-title text-2xl mb-6">Overte svoj e-mail</h2>
+                <p class="mb-4">Ďakujeme za registráciu! Pred pokračovaním prosím overte svoju e-mailovú
+                    adresu kliknutím na odkaz, ktorý sme Vám práve poslali. Ak ste e-mail nedostali, radi Vám
+                    pošleme ďalší.</p>
                 <div v-if="verificationSent" class="alert alert-success mb-4">
-                    New verification link sent.
+                    Nový overovací odkaz bol odoslaný.
                 </div>
                 <button @click="resendVerification" class="btn btn-primary" :disabled="sending">
                     <span v-if="sending" class="loading loading-spinner"></span>
-                    Send verification email again
+                    Znova odoslať overovací e-mail
                 </button>
                 <div class="justify-end card-actions">
-                    <button class="btn btn-ghost" @click="logout">Log out</button>
+                    <button class="btn btn-ghost" @click="logout">Odhlásiť sa</button>
                 </div>
             </div>
         </div>
@@ -54,7 +54,7 @@ const resendVerification = async () => {
         await authStore.resendVerificationEmail(emailFromParams);
         verificationSent.value = true;
     } catch (error) {
-        showErrorToast('Could not send verification email.');
+        showErrorToast('Overovací e-mail sa nepodarilo odoslať.');
     } finally {
         sending.value = false;
     }

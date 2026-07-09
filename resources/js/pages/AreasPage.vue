@@ -17,7 +17,7 @@
 
                         <div v-if="area.playgrounds?.length" class="mt-4 grid gap-3 sm:grid-cols-2">
                             <router-link v-for="playground in area.playgrounds" :key="playground.id"
-                                         :to="`/rezervacia/${playground.id}`"
+                                         :to="`/rezervacia/ihrisko/${playground.id}`"
                                          class="btn btn-outline btn-primary justify-between">
                                 {{ playground.name }}
                                 <span class="badge badge-secondary">{{ Number(playground.price_per_30min).toFixed(2) }} &euro; / 30 min</span>

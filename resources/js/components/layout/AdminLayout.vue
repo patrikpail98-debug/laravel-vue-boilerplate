@@ -15,13 +15,13 @@
                 <li>
                     <router-link to="/admin" class="flex items-center">
                         <ChartBarIcon class="w-5 h-5"/>
-                        Dashboard
+                        Prehľad
                     </router-link>
                 </li>
                 <li v-if="authStore.hasPermission('manage_content')">
                     <router-link to="/admin/content" class="flex items-center">
                         <CalendarIcon class="w-5 h-5"/>
-                        Content
+                        Obsah
                     </router-link>
                 </li>
                 <li v-if="authStore.hasPermission('manage_facilities')">
@@ -58,7 +58,7 @@
                                       d="M4 6h16M4 12h16M4 18h16"/>
                             </svg>
                         </button>
-                        <h2 class="text-lg font-semibold">{{ $route.meta.title || 'Admin' }}</h2>
+                        <h2 class="text-lg font-semibold">{{ $route.meta.title || 'Administrácia' }}</h2>
                     </div>
                     <div class="flex items-center gap-4">
                         <div class="dropdown dropdown-end">
@@ -69,9 +69,9 @@
                             </div>
                             <ul tabindex="0" class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52">
                                 <li>
-                                    <router-link to="/admin/profile">My profile</router-link>
+                                    <router-link to="/admin/profile">Môj profil</router-link>
                                 </li>
-                                <li><a @click="logout">Log out</a></li>
+                                <li><a @click="logout">Odhlásiť sa</a></li>
                             </ul>
                         </div>
                     </div>
@@ -104,7 +104,7 @@ watch(() => router.currentRoute.value, () => {
     sidebarOpen.value = false;
 });
 
-document.title = `Admin panel`;
+document.title = `Administrácia`;
 
 const userInitials = computed(() => {
     if (!authStore.user?.name) return '?';

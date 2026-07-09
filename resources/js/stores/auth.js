@@ -31,7 +31,7 @@ export const useAuthStore = defineStore('auth', {
                         return {verify_email: true};
                     }
                 }
-                throw new Error(errorData.message ?? 'Login failed');
+                throw new Error(errorData.message ?? 'Prihlásenie zlyhalo');
             }
 
             const data = await response.json();
@@ -57,7 +57,7 @@ export const useAuthStore = defineStore('auth', {
                 headers: {'Content-Type': 'application/json'}
             });
 
-            if (!response.ok) throw new Error('2FA verification failed');
+            if (!response.ok) throw new Error('Overenie dvojfaktorového kódu zlyhalo');
 
             const data = await response.json();
             this.setAuth(data.user, data.access_token);
@@ -75,7 +75,7 @@ export const useAuthStore = defineStore('auth', {
             });
 
             //console.log(response);
-            if (!response.ok) throw new Error('Registration failed');
+            if (!response.ok) throw new Error('Registrácia zlyhala');
 
             const {user, access_token} = await response.json();
             this.setAuth(user, access_token);
