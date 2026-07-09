@@ -22,7 +22,7 @@ class ReservationRejectedMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Vaša rezervácia bola zamietnutá',
+            subject: 'Vasa rezervacia bola zamietnuta',
         );
     }
 

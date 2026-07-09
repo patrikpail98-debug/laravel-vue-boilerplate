@@ -24,13 +24,13 @@ class TwoFactorCodeNotification extends Notification implements ShouldQueue
     public function toMail($notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Your Two-Factor Authentication Code')
-            ->greeting('Hello, ' . $notifiable->name . '!')
-            ->line('Your two-factor authentication code is: ')
+            ->subject('Vas overovaci kod')
+            ->greeting('Dobrý deň, ' . $notifiable->name . '!')
+            ->line('Váš kód pre dvojfaktorové overenie je:')
             ->line($notifiable->two_factor_email_code)
-            ->line('Code is valid for 10 minutes.')
-            ->line('If you did not request this code, no further action is required.')
-            ->salutation('Best regards, ' . config('app.name'));
+            ->line('Kód je platný 10 minút.')
+            ->line('Ak ste o tento kód nežiadali, nie je potrebné robiť žiadnu ďalšiu akciu.')
+            ->salutation('S pozdravom, ' . config('app.name'));
     }
 
     public function toArray($notifiable): array

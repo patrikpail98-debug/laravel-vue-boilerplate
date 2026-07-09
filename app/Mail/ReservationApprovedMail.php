@@ -22,7 +22,7 @@ class ReservationApprovedMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Vaša rezervácia bola schválená',
+            subject: 'Vasa rezervacia bola schvalena',
         );
     }
 

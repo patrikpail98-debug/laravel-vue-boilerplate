@@ -24,7 +24,7 @@ class ReservationPaymentMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Platobné údaje k Vašej rezervácii',
+            subject: 'Platobne udaje k Vasej rezervacii',
         );
     }
 

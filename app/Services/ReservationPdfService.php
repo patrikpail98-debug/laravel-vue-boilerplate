@@ -20,7 +20,15 @@ class ReservationPdfService
         $orgIban = Setting::query()->where('key', Setting::ORG_IBAN_KEY)->value('value') ?: '';
         $orgBankName = Setting::query()->where('key', Setting::ORG_BANK_NAME_KEY)->value('value') ?: '';
 
-        return Pdf::loadView('pdf.payment_slip', [
+        return Pdf::setOptions([
+            // DejaVu Sans is bundled with dompdf and covers Slovak diacritics;
+            // the core PDF fonts (Helvetica/"sans-serif") don't, so without
+            // this the payment slip renders "?" wherever a diacritic is used
+            // even though the Blade view's CSS also sets the font-family.
+            'defaultFont' => 'DejaVu Sans',
+            'isHtml5ParserEnabled' => true,
+            'isFontSubsettingEnabled' => true,
+        ])->loadView('pdf.payment_slip', [
             'reservation' => $reservation->loadMissing('playground.area'),
             'orgName' => $orgName,
             'orgIban' => $orgIban,

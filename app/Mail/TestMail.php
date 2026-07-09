@@ -28,7 +28,7 @@ class TestMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Testovací e-mail',
+            subject: 'Testovaci e-mail',
         );
     }
 
