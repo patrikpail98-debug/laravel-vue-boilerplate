@@ -156,7 +156,7 @@ class NexiPaymentService
         return DB::transaction(function () use ($transaction, $data, $outcome, $orderId) {
             $transaction->update([
                 'raw_response' => $data,
-                'last_operation_type' => $data['lastOperationType'] ?? null,
+                'last_operation_type' => $data['orderStatus']['lastOperationType'] ?? null,
                 'status' => match ($outcome) {
                     'authorized' => PaymentTransaction::STATUS_AUTHORIZED,
                     'declined' => PaymentTransaction::STATUS_DECLINED,
@@ -199,27 +199,65 @@ class NexiPaymentService
 
     /**
      * Interprets a GET /orders/{orderId} response into 'authorized',
-     * 'declined' or 'pending'. Deliberately conservative: an ambiguous or
-     * incomplete response is treated as 'pending' rather than guessed at, so
-     * a reservation is never wrongly approved or cancelled - it stays held
-     * until either a later check confirms it or the hold expires.
+     * 'declined' or 'pending'.
+     *
+     * The response has two relevant parts: a flat `orderStatus` summary
+     * (lastOperationType/authorizedAmount/capturedAmount) and an `operations`
+     * array where each entry carries its own operationType + operationResult
+     * (e.g. AUTHORIZATION/EXECUTED, or AUTHORIZATION/DECLINED). The result is
+     * what actually distinguishes a genuine decline from a still-open
+     * authorization, so every operation is scanned rather than only trusting
+     * the top-level lastOperationType.
+     *
+     * Deliberately conservative on anything ambiguous/incomplete: falls
+     * through to 'pending' rather than guessing, so a reservation is never
+     * wrongly approved - it stays held until a later check confirms it or
+     * the hold expires.
      */
     private function interpretOutcome(array $orderData, int $expectedAmountCents): string
     {
-        $lastOperationType = $orderData['lastOperationType'] ?? null;
+        $orderStatus = $orderData['orderStatus'] ?? [];
+        $operations = $orderData['operations'] ?? [];
 
-        if (in_array($lastOperationType, ['CANCEL', 'VOID', 'REFUND'], true)) {
+        if (in_array($orderStatus['lastOperationType'] ?? null, ['CANCEL', 'VOID', 'REFUND'], true)) {
             return 'declined';
         }
 
-        $authorizedAmount = isset($orderData['authorizedAmount']) ? (int)$orderData['authorizedAmount'] : null;
-        $capturedAmount = isset($orderData['capturedAmount']) ? (int)$orderData['capturedAmount'] : null;
-        $confirmedAmount = $capturedAmount ?? $authorizedAmount;
+        $isAuthorized = false;
+        $isDenied = false;
 
-        if ($confirmedAmount !== null
-            && $confirmedAmount >= $expectedAmountCents
-            && in_array($lastOperationType, ['AUTHORIZATION', 'CAPTURE'], true)) {
-            return 'authorized';
+        foreach ($operations as $operation) {
+            if (!in_array($operation['operationType'] ?? null, ['AUTHORIZATION', 'CAPTURE'], true)) {
+                continue;
+            }
+
+            $result = $operation['operationResult'] ?? null;
+
+            if (in_array($result, ['AUTHORIZED', 'EXECUTED'], true)) {
+                $isAuthorized = true;
+            }
+
+            if (in_array($result, ['DECLINED', 'REFUSED', 'ERROR'], true)) {
+                $isDenied = true;
+            }
+        }
+
+        if ($isDenied && !$isAuthorized) {
+            return 'declined';
+        }
+
+        if ($isAuthorized) {
+            $authorizedAmount = isset($orderStatus['authorizedAmount']) ? (int)$orderStatus['authorizedAmount'] : null;
+            $capturedAmount = isset($orderStatus['capturedAmount']) ? (int)$orderStatus['capturedAmount'] : null;
+            $confirmedAmount = $capturedAmount ?? $authorizedAmount;
+
+            // Extra safety net beyond the operation result itself: only trust
+            // the authorization if the confirmed amount matches what we asked
+            // for. A missing/mismatched amount on an otherwise-authorized
+            // operation falls through to 'pending' instead of being approved.
+            if ($confirmedAmount !== null && $confirmedAmount >= $expectedAmountCents) {
+                return 'authorized';
+            }
         }
 
         return 'pending';
