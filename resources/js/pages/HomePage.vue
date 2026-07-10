@@ -1,10 +1,12 @@
 <template>
     <div>
-        <!-- Hero -->
-        <section class="bg-primary text-primary-content">
-            <div class="max-w-6xl mx-auto px-4 py-16 md:py-24 text-center">
-                <h1 class="text-3xl md:text-5xl font-bold mb-4">Rezervujte si športovisko v Karlovej Vsi</h1>
-                <p class="text-lg md:text-xl max-w-2xl mx-auto opacity-90 mb-8">
+        <!-- Hero - the header overlays this photo (see Header.vue) so the two read as one section -->
+        <section class="relative flex items-center min-h-[420px] sm:min-h-[520px] md:min-h-[640px] bg-cover bg-center text-white"
+                 style="background-image: url('/images/hero-karlova-ves.jpg')">
+            <div class="absolute inset-0 bg-gradient-to-b from-black/55 via-primary/40 to-primary/70"></div>
+            <div class="relative w-full max-w-6xl mx-auto px-4 pt-24 pb-16 md:pt-28 md:pb-24 text-center">
+                <h1 class="text-3xl md:text-5xl font-bold mb-4 drop-shadow-lg">Rezervujte si športovisko v Karlovej Vsi</h1>
+                <p class="text-lg md:text-xl max-w-2xl mx-auto opacity-95 mb-8 drop-shadow">
                     Tenisové kurty, multifunkčné ihriská a ďalšie športoviská mestskej časti si teraz môžete
                     rezervovať online, bez nutnosti registrácie.
                 </p>

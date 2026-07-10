@@ -1,6 +1,7 @@
 <template>
-    <header>
-        <div class="navbar bg-primary text-primary-content shadow-md px-4 md:px-8">
+    <header :class="isHeroOverlay ? 'absolute top-0 inset-x-0 z-20' : 'relative'">
+        <div class="navbar px-4 md:px-8 text-primary-content"
+             :class="isHeroOverlay ? 'bg-gradient-to-b from-black/50 to-transparent' : 'bg-primary shadow-md'">
             <div class="navbar-start">
                 <router-link to="/" class="btn btn-ghost text-lg normal-case hover:bg-white/10 px-2 gap-2">
                     <img src="/images/erb-karlova-ves.png" alt="Erb Mestskej časti Bratislava-Karlova Ves" class="h-9 w-auto"/>
@@ -55,15 +56,22 @@
 </template>
 
 <script setup>
-import {ref} from 'vue';
-import {useRouter} from 'vue-router';
+import {computed, ref} from 'vue';
+import {useRoute, useRouter} from 'vue-router';
 import {Bars3Icon, XMarkIcon} from '@heroicons/vue/24/outline';
 import {navItems} from '@/constants/navigation.js';
 import {useAuthStore} from '@/stores/auth.js';
 
 const authStore = useAuthStore();
 const router = useRouter();
+const route = useRoute();
 const mobileOpen = ref(false);
+
+// On the home page the header floats transparently over the hero photo so
+// the two read as one seamless section; everywhere else it stays a normal
+// solid navbar. The mobile dropdown below it always keeps its own solid
+// background, so it stays readable either way.
+const isHeroOverlay = computed(() => route.path === '/');
 
 const logout = async () => {
     await authStore.logout();
