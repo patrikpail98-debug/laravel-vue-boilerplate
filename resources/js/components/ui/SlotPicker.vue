@@ -87,10 +87,16 @@ const dayClass = (day) => {
     return day.iso === selectedDate.value ? 'bg-primary text-primary-content border-primary' : 'border-base-300 hover:bg-base-200';
 };
 
-const buildDays = () => {
+// dayCount is the number of calendar days to show, starting today - driven by
+// the day-availability response (which already reflects the playground's real
+// max_horizon_days from the backend) rather than the maxHorizonDays prop,
+// since that prop only arrives via the "loaded" event emitted from the first
+// fetchAvailability() call, which happens after this runs - using it directly
+// here would always build the calendar from its stale 60-day default.
+const buildDays = (dayCount) => {
     const list = [];
     const weekdays = ['Ne', 'Po', 'Ut', 'St', 'Št', 'Pi', 'So'];
-    for (let i = 0; i <= props.maxHorizonDays; i++) {
+    for (let i = 0; i < dayCount; i++) {
         const d = new Date();
         d.setHours(0, 0, 0, 0);
         d.setDate(d.getDate() + i);
@@ -179,6 +185,8 @@ const fetchAvailability = async () => {
     }
 };
 
+// Returns the number of bookable calendar days (today through the
+// playground's real horizon), or null if the request failed.
 const fetchDayAvailability = async () => {
     try {
         const response = await http.request(`/api/playgrounds/${props.playgroundId}/day-availability`);
@@ -187,9 +195,11 @@ const fetchDayAvailability = async () => {
             throw new Error(data.message ?? 'Nepodarilo sa načítať dostupnosť termínov.');
         }
         dayStatus.value = Object.fromEntries(data.map(day => [day.date, day]));
+        return data.length;
     } catch (error) {
         // Non-fatal: individual slots still get disabled once a date is selected.
         console.error('Failed to load day availability', error);
+        return null;
     }
 };
 
@@ -269,15 +279,13 @@ const firstAvailableDayIso = () => {
     return found ? found.iso : days.value[0]?.iso;
 };
 
-watch(() => props.playgroundId, async () => {
-    buildDays();
-    await fetchDayAvailability();
+const initDays = async () => {
+    const dayCount = await fetchDayAvailability();
+    buildDays(dayCount ?? props.maxHorizonDays + 1);
     selectDate(firstAvailableDayIso());
-});
+};
 
-onMounted(async () => {
-    buildDays();
-    await fetchDayAvailability();
-    selectDate(firstAvailableDayIso());
-});
+watch(() => props.playgroundId, initDays);
+
+onMounted(initDays);
 </script>

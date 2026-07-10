@@ -141,4 +141,9 @@ class Reservation extends Model
     {
         return $this->end_time->clone()->setTimezone(config('app.facility_timezone'));
     }
+
+    public function verifiedAtLocal(): ?Carbon
+    {
+        return $this->verified_at?->clone()->setTimezone(config('app.facility_timezone'));
+    }
 }

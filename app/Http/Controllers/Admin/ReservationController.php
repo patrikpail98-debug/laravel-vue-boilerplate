@@ -7,9 +7,11 @@ use App\Mail\ReservationApprovedMail;
 use App\Mail\ReservationPaymentMail;
 use App\Mail\ReservationRejectedMail;
 use App\Models\Reservation;
+use App\Services\ReservationPdfService;
 use App\Traits\JsonResponseTrait;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Mail;
 
 class ReservationController extends Controller
@@ -84,5 +86,23 @@ class ReservationController extends Controller
         Mail::to($reservation->customer_email)->send(new ReservationPaymentMail($reservation));
 
         return $this->successResponse(['message' => 'Platobný e-mail bol znova odoslaný.']);
+    }
+
+    /**
+     * Downloadable payment summary PDF - only for reservations that are
+     * actually paid (approved), regardless of payment method.
+     */
+    public function downloadPaymentSummary(Reservation $reservation): JsonResponse|Response
+    {
+        if ($reservation->status !== Reservation::STATUS_APPROVED) {
+            return $this->errorResponse(['message' => 'Súhrn platby je dostupný len pre schválené (zaplatené) rezervácie.'], 422);
+        }
+
+        $pdf = ReservationPdfService::instance()->generatePaymentSummary($reservation);
+
+        return response($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="suhrn-platby-' . $reservation->variable_symbol . '.pdf"',
+        ]);
     }
 }

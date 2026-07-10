@@ -49,6 +49,9 @@
                                 <li v-if="reservation.status === 'pending_approval'">
                                     <a @click="resendPayment(reservation)"><EnvelopeIcon class="w-4 h-4"/> Znova poslať platobný e-mail</a>
                                 </li>
+                                <li v-if="reservation.status === 'approved'">
+                                    <a @click="downloadPaymentSummary(reservation)"><DocumentArrowDownIcon class="w-4 h-4"/> Stiahnuť súhrn platby (PDF)</a>
+                                </li>
                                 <li v-if="['pending_approval', 'approved'].includes(reservation.status)">
                                     <a @click="openNoteModal(reservation, 'reject')" class="text-error"><XMarkIcon class="w-4 h-4"/> Zamietnuť</a>
                                 </li>
@@ -91,7 +94,7 @@
 
 <script setup>
 import {onMounted, ref} from 'vue';
-import {CheckIcon, EllipsisHorizontalIcon, EnvelopeIcon, TrashIcon, XMarkIcon} from '@heroicons/vue/24/outline';
+import {CheckIcon, DocumentArrowDownIcon, EllipsisHorizontalIcon, EnvelopeIcon, TrashIcon, XMarkIcon} from '@heroicons/vue/24/outline';
 import 'notyf/notyf.min.css';
 import {showErrorToast, showSuccessToast} from '../../constants/toast.js';
 import http from '../../http.js';
@@ -159,6 +162,28 @@ const resendPayment = async (reservation) => {
         showSuccessToast('Platobný e-mail bol znova odoslaný.');
     } catch (error) {
         showErrorToast(error.message ?? 'Odoslanie zlyhalo.');
+    }
+};
+
+const downloadPaymentSummary = async (reservation) => {
+    try {
+        const response = await http.request(`/api/admin/reservations/${reservation.id}/payment-summary-pdf`);
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.message ?? 'Nepodarilo sa vygenerovať súhrn platby.');
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `suhrn-platby-${reservation.variable_symbol}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+    } catch (error) {
+        showErrorToast(error.message ?? 'Nepodarilo sa vygenerovať súhrn platby.');
     }
 };
 

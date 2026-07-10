@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AreaController as AdminAreaController;
 use App\Http\Controllers\Admin\PlaygroundController as AdminPlaygroundController;
 use App\Http\Controllers\Admin\ReservationController as AdminReservationController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\StatisticsController;
 use App\Http\Controllers\AreaController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ForgotPasswordController;
@@ -73,6 +74,8 @@ Route::middleware(['auth:sanctum', 'throttle:api', 'verified'])->group(function 
     // Admin routes
     Route::prefix('admin')->middleware('role:admin,editor')->group(function () {
 
+        Route::get('statistics', [StatisticsController::class, 'index']);
+
         Route::prefix('settings')->middleware('permission:manage_settings')->group(function () {
             Route::get('/', [SettingsController::class, 'index']);
             Route::put('/', [SettingsController::class, 'update']);
@@ -125,6 +128,7 @@ Route::middleware(['auth:sanctum', 'throttle:api', 'verified'])->group(function 
             Route::put('/{reservation}/reject', [AdminReservationController::class, 'reject']);
             Route::put('/{reservation}/cancel', [AdminReservationController::class, 'cancel']);
             Route::post('/{reservation}/resend-payment-email', [AdminReservationController::class, 'resendPaymentEmail']);
+            Route::get('/{reservation}/payment-summary-pdf', [AdminReservationController::class, 'downloadPaymentSummary']);
         });
     });
 });

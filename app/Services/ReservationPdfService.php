@@ -35,4 +35,22 @@ class ReservationPdfService
             'orgBankName' => $orgBankName,
         ])->output();
     }
+
+    /**
+     * Renders a payment summary/confirmation PDF for an already-paid
+     * (approved) reservation - for admin download, not emailed automatically.
+     */
+    public function generatePaymentSummary(Reservation $reservation): string
+    {
+        $orgName = Setting::query()->where('key', Setting::ORG_NAME_KEY)->value('value') ?: 'Mestská časť Bratislava-Karlova Ves';
+
+        return Pdf::setOptions([
+            'defaultFont' => 'DejaVu Sans',
+            'isHtml5ParserEnabled' => true,
+            'isFontSubsettingEnabled' => true,
+        ])->loadView('pdf.payment_summary', [
+            'reservation' => $reservation->loadMissing('playground.area'),
+            'orgName' => $orgName,
+        ])->output();
+    }
 }
