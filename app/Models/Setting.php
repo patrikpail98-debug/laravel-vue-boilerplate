@@ -19,6 +19,7 @@ class Setting extends Model
     const string CONTACT_ADDRESS_KEY = 'contact.address';
     const string CONTACT_PHONE_KEY = 'contact.phone';
     const string CONTACT_EMAIL_KEY = 'contact.email';
+    const string CONTACT_PERSON_KEY = 'contact.person';
     const string CONTACT_HOURS_KEY = 'contact.hours';
     const string CONTACT_LATITUDE_KEY = 'contact.latitude';
     const string CONTACT_LONGITUDE_KEY = 'contact.longitude';
@@ -32,6 +33,7 @@ class Setting extends Model
         self::CONTACT_ADDRESS_KEY,
         self::CONTACT_PHONE_KEY,
         self::CONTACT_EMAIL_KEY,
+        self::CONTACT_PERSON_KEY,
         self::CONTACT_HOURS_KEY,
         self::CONTACT_LATITUDE_KEY,
         self::CONTACT_LONGITUDE_KEY,

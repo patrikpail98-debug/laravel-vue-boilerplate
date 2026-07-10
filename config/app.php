@@ -69,6 +69,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Facility Timezone
+    |--------------------------------------------------------------------------
+    |
+    | The real-world timezone of the sports facilities being booked. All
+    | reservation times are stored in the database as true UTC instants, but
+    | wall-clock concepts (opening hours, "today", slot labels shown to
+    | visitors) are expressed in this timezone and converted at the edges.
+    |
+    */
+
+    'facility_timezone' => env('FACILITY_TIMEZONE', 'Europe/Bratislava'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Locale Configuration
     |--------------------------------------------------------------------------
     |

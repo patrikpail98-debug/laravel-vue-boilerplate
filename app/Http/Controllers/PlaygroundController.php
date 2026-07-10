@@ -55,9 +55,10 @@ class PlaygroundController extends Controller
         }
 
         $service = ReservationService::instance();
-        $date = Carbon::createFromFormat('Y-m-d', $validated['date'])->startOfDay();
+        $tz = config('app.facility_timezone');
+        $date = Carbon::createFromFormat('Y-m-d', $validated['date'], $tz)->startOfDay();
 
-        if ($date->lt(Carbon::today()) || $date->gt($service->getMaxBookableDate($playground))) {
+        if ($date->lt(Carbon::today($tz)) || $date->gt($service->getMaxBookableDate($playground))) {
             return $this->errorResponse(['message' => 'Zvolený dátum je mimo povoleného rozsahu.'], 422);
         }
 

@@ -45,6 +45,7 @@ class SettingsController extends Controller
             'settings.contact\.address' => 'sometimes|nullable|string|max:255',
             'settings.contact\.phone' => 'sometimes|nullable|string|max:30',
             'settings.contact\.email' => 'sometimes|nullable|string|max:255',
+            'settings.contact\.person' => 'sometimes|nullable|string|max:255',
             'settings.contact\.hours' => 'sometimes|nullable|string|max:255',
             // Stored as free-form strings (not `numeric`) so an empty value from the
             // settings form doesn't fail validation - Laravel's `nullable` rule only

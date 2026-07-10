@@ -32,7 +32,7 @@
 
         <table>
             <tr><td class="label">Ihrisko</td><td class="value">{{ $reservation->playground->name }}</td></tr>
-            <tr><td class="label">Termín</td><td class="value">{{ $reservation->start_time->format('d.m.Y H:i') }} &ndash; {{ $reservation->end_time->format('H:i') }}</td></tr>
+            <tr><td class="label">Termín</td><td class="value">{{ $reservation->startTimeLocal()->format('d.m.Y H:i') }} &ndash; {{ $reservation->endTimeLocal()->format('H:i') }}</td></tr>
             <tr><td class="label">Suma</td><td class="value">{{ number_format((float)$reservation->total_price, 2, ',', ' ') }} &euro;</td></tr>
             <tr><td class="label">Variabilný symbol</td><td class="value">{{ $reservation->variable_symbol }}</td></tr>
         </table>

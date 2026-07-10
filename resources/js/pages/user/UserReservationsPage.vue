@@ -49,6 +49,7 @@ import {onMounted, ref} from 'vue';
 import 'notyf/notyf.min.css';
 import {showErrorToast} from '../../constants/toast.js';
 import http from '../../http.js';
+import {formatReservationRange} from '../../utils/datetime.js';
 
 const reservations = ref([]);
 const loading = ref(true);
@@ -71,12 +72,7 @@ const statusBadgeClass = (status) => ({
     cancelled: 'badge-error badge-outline',
 }[status] ?? 'badge-ghost');
 
-const formatRange = (start, end) => {
-    const s = new Date(start);
-    const e = new Date(end);
-    const pad = (n) => String(n).padStart(2, '0');
-    return `${pad(s.getDate())}.${pad(s.getMonth() + 1)}.${s.getFullYear()} ${pad(s.getHours())}:${pad(s.getMinutes())}–${pad(e.getHours())}:${pad(e.getMinutes())}`;
-};
+const formatRange = formatReservationRange;
 
 onMounted(async () => {
     try {

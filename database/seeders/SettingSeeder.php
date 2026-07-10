@@ -52,6 +52,10 @@ class SettingSeeder extends Seeder
             ['value' => '']
         );
         Setting::updateOrCreate(
+            ['key' => Setting::CONTACT_PERSON_KEY],
+            ['value' => '']
+        );
+        Setting::updateOrCreate(
             ['key' => Setting::CONTACT_HOURS_KEY],
             ['value' => '']
         );

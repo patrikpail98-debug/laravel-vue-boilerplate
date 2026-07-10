@@ -41,8 +41,11 @@ class ReservationController extends Controller
             $reservation = DB::transaction(function () use ($validated, $service, $request) {
                 $playground = Playground::query()->lockForUpdate()->findOrFail($validated['playground_id']);
 
-                $start = Carbon::parse($validated['start_time']);
-                $end = Carbon::parse($validated['end_time']);
+                // The frontend sends naive wall-clock times (no offset) meaning
+                // facility-local time, e.g. "14:00" at the ground itself - parse
+                // them as such, then convert to a true UTC instant for storage.
+                $start = Carbon::parse($validated['start_time'], config('app.facility_timezone'))->setTimezone('UTC');
+                $end = Carbon::parse($validated['end_time'], config('app.facility_timezone'))->setTimezone('UTC');
 
                 $price = $service->validateAndPrice($playground, $start, $end);
 

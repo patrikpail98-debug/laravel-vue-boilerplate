@@ -125,6 +125,18 @@
                             />
                         </div>
                         <div class="form-control">
+                            <label for="contact_person" class="label">
+                                <span class="label-text">Kontaktná osoba</span>
+                            </label>
+                            <input
+                                id="contact_person"
+                                v-model="settings['contact.person']"
+                                type="text"
+                                placeholder="Meno a priezvisko"
+                                class="input input-bordered w-full"
+                            />
+                        </div>
+                        <div class="form-control">
                             <label for="contact_hours" class="label">
                                 <span class="label-text">Úradné hodiny</span>
                             </label>
@@ -280,6 +292,7 @@ const settings = ref({
     'contact.address': '',
     'contact.phone': '',
     'contact.email': '',
+    'contact.person': '',
     'contact.hours': '',
     'contact.latitude': '',
     'contact.longitude': '',

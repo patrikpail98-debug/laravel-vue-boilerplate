@@ -90,4 +90,19 @@ class Reservation extends Model
         return $this->status === self::STATUS_UNVERIFIED
             && $this->created_at->lt(Carbon::now()->subMinutes(self::HOLD_MINUTES));
     }
+
+    /**
+     * start_time/end_time are stored as true UTC instants; emails, PDFs and
+     * anywhere else showing a wall-clock time to a human must display it in
+     * the facility's own timezone, not the server's (UTC).
+     */
+    public function startTimeLocal(): Carbon
+    {
+        return $this->start_time->clone()->setTimezone(config('app.facility_timezone'));
+    }
+
+    public function endTimeLocal(): Carbon
+    {
+        return $this->end_time->clone()->setTimezone(config('app.facility_timezone'));
+    }
 }

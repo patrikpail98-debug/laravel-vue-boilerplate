@@ -60,8 +60,15 @@
                         </div>
                     </div>
 
-                    <FacilityMap v-if="hasCoordinates" :markers="[marker]" :center="{lat: marker.latitude, lng: marker.longitude}"
-                                 :zoom="16" height="300px" class="mt-6" :hide-list-on-desktop="false"/>
+                    <template v-if="hasCoordinates">
+                        <FacilityMap :markers="[marker]" :center="{lat: marker.latitude, lng: marker.longitude}"
+                                     :zoom="16" height="300px" class="mt-6" :hide-list-on-desktop="false"/>
+
+                        <a :href="navigationUrl" target="_blank" rel="noopener" class="btn btn-outline btn-primary mt-4">
+                            <MapPinIcon class="w-5 h-5"/>
+                            Navigovať
+                        </a>
+                    </template>
 
                     <div class="card-actions justify-end mt-8">
                         <router-link :to="`/rezervacia/${playground.id}`" class="btn btn-primary btn-lg">
@@ -79,6 +86,7 @@
 <script setup>
 import {computed, onMounted, ref} from 'vue';
 import {useRoute} from 'vue-router';
+import {MapPinIcon} from '@heroicons/vue/24/outline';
 import http from '@/http.js';
 import FacilityMap from '@/components/ui/FacilityMap.vue';
 import {showErrorToast} from '../constants/toast.js';
@@ -107,6 +115,12 @@ const marker = computed(() => ({
     latitude: Number(playground.value.latitude),
     longitude: Number(playground.value.longitude),
 }));
+
+// Opens the visitor's default maps app with turn-by-turn navigation to the
+// facility (Google Maps handles this URL on both desktop and mobile).
+const navigationUrl = computed(() =>
+    `https://www.google.com/maps/dir/?api=1&destination=${marker.value.latitude},${marker.value.longitude}`
+);
 
 onMounted(async () => {
     try {

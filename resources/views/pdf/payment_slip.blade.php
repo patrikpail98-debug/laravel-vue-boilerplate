@@ -41,7 +41,7 @@
     </tr>
     <tr>
         <td class="label">Termín</td>
-        <td class="value">{{ $reservation->start_time->format('d.m.Y H:i') }} &ndash; {{ $reservation->end_time->format('H:i') }}</td>
+        <td class="value">{{ $reservation->startTimeLocal()->format('d.m.Y H:i') }} &ndash; {{ $reservation->endTimeLocal()->format('H:i') }}</td>
     </tr>
     <tr>
         <td class="label">Suma na úhradu</td>
