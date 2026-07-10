@@ -79,6 +79,8 @@ Route::middleware(['auth:sanctum', 'throttle:api', 'verified'])->group(function 
         Route::prefix('settings')->middleware('permission:manage_settings')->group(function () {
             Route::get('/', [SettingsController::class, 'index']);
             Route::put('/', [SettingsController::class, 'update']);
+            Route::get('/all', [SettingsController::class, 'allSettings']);
+            Route::put('/all/{setting}', [SettingsController::class, 'updateOne']);
             Route::get('/cache-keys', [SettingsController::class, 'getCacheKeys']);
             Route::post('/flush-cache', [SettingsController::class, 'flushCache']);
             Route::post('/run-command', [SettingsController::class, 'runCommand']);

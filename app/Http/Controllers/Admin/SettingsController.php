@@ -75,6 +75,34 @@ class SettingsController extends Controller
     }
 
     /**
+     * Every raw setting row (key + value), for the "all settings" technical
+     * view - unlike index()/update() above, this isn't limited to the
+     * curated set of keys the settings form knows about.
+     */
+    public function allSettings(): JsonResponse
+    {
+        return $this->successResponse(
+            Setting::query()->orderBy('key')->get(['id', 'key', 'value'])
+        );
+    }
+
+    /**
+     * Updates a single setting's raw value by id, from the "all settings" view.
+     */
+    public function updateOne(Request $request, Setting $setting): JsonResponse
+    {
+        $validated = $request->validate([
+            'value' => 'nullable|string|max:5000',
+        ]);
+
+        $setting->update(['value' => $validated['value'] ?? '']);
+
+        $this->searchAndDelete('*' . CacheKeyService::instance()->getSettingsKey() . '*');
+
+        return $this->successResponse($setting);
+    }
+
+    /**
      * Get a list of Redis cache keys based on a pattern.
      */
     public function getCacheKeys(Request $request): JsonResponse

@@ -147,6 +147,15 @@ const routes = [
                 }
             },
             {
+                path: 'settings/all',
+                name: 'AdminAllSettingsPage',
+                component: () => import('./pages/admin/AdminAllSettingsPage.vue'),
+                meta: {
+                    title: 'Všetky nastavenia',
+                    permissions: ['manage_settings']
+                }
+            },
+            {
                 path: 'facilities',
                 name: 'admin-facilities',
                 component: () => import('./pages/admin/AdminFacilitiesPage.vue'),

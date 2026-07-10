@@ -36,6 +36,24 @@
                         Rezervácie
                     </router-link>
                 </li>
+                <li v-if="authStore.hasPermission('manage_users')">
+                    <router-link to="/admin/users" class="flex items-center">
+                        <UsersIcon class="w-5 h-5"/>
+                        Používatelia
+                    </router-link>
+                </li>
+                <li v-if="authStore.hasPermission('manage_settings')">
+                    <router-link to="/admin/settings" class="flex items-center">
+                        <Cog6ToothIcon class="w-5 h-5"/>
+                        Nastavenia
+                    </router-link>
+                </li>
+                <li v-if="authStore.hasPermission('manage_settings')">
+                    <router-link to="/admin/settings/all" class="flex items-center">
+                        <WrenchScrewdriverIcon class="w-5 h-5"/>
+                        Všetky nastavenia
+                    </router-link>
+                </li>
             </ul>
         </div>
 
@@ -92,6 +110,9 @@ import {
     ChartBarIcon,
     CalendarIcon,
     MapPinIcon,
+    UsersIcon,
+    Cog6ToothIcon,
+    WrenchScrewdriverIcon,
 } from '@heroicons/vue/24/outline';
 import {useAuthStore} from '@/stores/auth';
 import {useRouter} from 'vue-router';
