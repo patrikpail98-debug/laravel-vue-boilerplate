@@ -50,7 +50,7 @@ class ReservationService
         $booked = [];
 
         foreach ($reservations as $reservation) {
-            if ($reservation->isExpiredHold()) {
+            if ($reservation->isExpiredSlotHold()) {
                 continue;
             }
 
@@ -167,7 +167,7 @@ class ReservationService
         $bookedCountByDate = [];
 
         foreach ($reservations as $reservation) {
-            if ($reservation->isExpiredHold()) {
+            if ($reservation->isExpiredSlotHold()) {
                 continue;
             }
 
@@ -218,7 +218,7 @@ class ReservationService
             ->get(['id', 'status', 'created_at']);
 
         foreach ($reservations as $reservation) {
-            if (!$reservation->isExpiredHold()) {
+            if (!$reservation->isExpiredSlotHold()) {
                 return true;
             }
         }

@@ -70,6 +70,7 @@ class PlaygroundController extends Controller
                 'image_url' => $playground->image_url,
                 'latitude' => $playground->latitude,
                 'longitude' => $playground->longitude,
+                'allow_card_payment' => $playground->allow_card_payment,
             ],
             'booked_slots' => $service->getBookedSlots($playground, $date),
             'price_per_30min' => (float)$playground->price_per_30min,

@@ -78,6 +78,18 @@
                                 class="input input-bordered w-full"
                             />
                         </div>
+                        <div class="form-control">
+                            <label for="sport_notification_email" class="label">
+                                <span class="label-text">E-mail pre upozornenia na zaplatené rezervácie kartou</span>
+                            </label>
+                            <input
+                                id="sport_notification_email"
+                                v-model="settings['notifications.sport_email']"
+                                type="email"
+                                placeholder="sport@karlovaves.sk"
+                                class="input input-bordered w-full"
+                            />
+                        </div>
                     </div>
                     <div class="mt-6 flex justify-end">
                         <button @click="saveSettings" class="btn btn-primary" :disabled="isSaving">
@@ -289,6 +301,7 @@ const settings = ref({
     'org.name': '',
     'org.iban': '',
     'org.bank_name': '',
+    'notifications.sport_email': '',
     'contact.address': '',
     'contact.phone': '',
     'contact.email': '',

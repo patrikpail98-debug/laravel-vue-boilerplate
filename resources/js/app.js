@@ -50,6 +50,12 @@ const routes = [
         meta: {public: true}
     },
     {
+        path: '/rezervacia/platba/navrat',
+        name: 'reservations.payment-return',
+        component: () => import('./pages/PaymentReturnPage.vue'),
+        meta: {public: true}
+    },
+    {
         path: '/rezervacia/ihrisko/:playgroundId',
         name: 'reservations.playground-detail',
         component: () => import('./pages/PlaygroundDetailPage.vue'),

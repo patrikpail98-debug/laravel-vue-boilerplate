@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Storage;
  * @property float|null $latitude
  * @property float|null $longitude
  * @property array|null $opening_hours
+ * @property bool $allow_card_payment
  */
 class Playground extends Model
 {
@@ -48,6 +49,7 @@ class Playground extends Model
         'latitude',
         'longitude',
         'opening_hours',
+        'allow_card_payment',
     ];
 
     protected $appends = [
@@ -64,6 +66,7 @@ class Playground extends Model
             'latitude' => 'decimal:7',
             'longitude' => 'decimal:7',
             'opening_hours' => 'array',
+            'allow_card_payment' => 'boolean',
         ];
     }
 

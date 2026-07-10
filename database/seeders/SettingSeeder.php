@@ -67,5 +67,11 @@ class SettingSeeder extends Seeder
             ['key' => Setting::CONTACT_LONGITUDE_KEY],
             ['value' => '']
         );
+
+        // Internal notification recipient for paid-by-card reservations.
+        Setting::updateOrCreate(
+            ['key' => Setting::SPORT_NOTIFICATION_EMAIL_KEY],
+            ['value' => 'sport@karlovaves.sk']
+        );
     }
 }

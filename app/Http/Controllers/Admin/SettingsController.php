@@ -52,6 +52,7 @@ class SettingsController extends Controller
             // bypasses other rules for an actual null, not an empty string.
             'settings.contact\.latitude' => 'sometimes|nullable|string|max:50',
             'settings.contact\.longitude' => 'sometimes|nullable|string|max:50',
+            'settings.notifications\.sport_email' => 'sometimes|nullable|email|max:255',
         ]);
 
         if ($validator->fails()) {

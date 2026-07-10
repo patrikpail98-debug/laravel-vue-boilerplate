@@ -17,6 +17,7 @@
                     <th class="bg-base-200">Termín</th>
                     <th class="bg-base-200">Suma</th>
                     <th class="bg-base-200">VS</th>
+                    <th class="bg-base-200">Platba</th>
                     <th class="bg-base-200">Stav</th>
                     <th class="bg-base-200 text-right">Akcie</th>
                 </tr>
@@ -34,6 +35,7 @@
                     <td>{{ formatRange(reservation.start_time, reservation.end_time) }}</td>
                     <td>{{ Number(reservation.total_price).toFixed(2) }} &euro;</td>
                     <td>{{ reservation.variable_symbol }}</td>
+                    <td>{{ paymentMethodLabel(reservation.payment_method) }}</td>
                     <td><span class="badge" :class="statusBadgeClass(reservation.status)">{{ statusLabel(reservation.status) }}</span></td>
                     <td class="text-right">
                         <div class="dropdown dropdown-left">
@@ -58,7 +60,7 @@
                     </td>
                 </tr>
                 <tr v-if="!reservations.length">
-                    <td colspan="7" class="text-center text-base-content/50 py-8">Žiadne rezervácie.</td>
+                    <td colspan="8" class="text-center text-base-content/50 py-8">Žiadne rezervácie.</td>
                 </tr>
                 </tbody>
             </table>
@@ -100,6 +102,7 @@ const statusFilter = ref('');
 
 const statuses = [
     {value: 'unverified', label: 'Čaká na overenie e-mailu'},
+    {value: 'awaiting_payment', label: 'Čaká na platbu kartou'},
     {value: 'pending_approval', label: 'Čaká na platbu'},
     {value: 'approved', label: 'Schválené'},
     {value: 'rejected', label: 'Zamietnuté'},
@@ -110,11 +113,17 @@ const statusLabel = (value) => statuses.find(s => s.value === value)?.label ?? v
 
 const statusBadgeClass = (status) => ({
     unverified: 'badge-ghost',
+    awaiting_payment: 'badge-warning',
     pending_approval: 'badge-warning',
     approved: 'badge-success',
     rejected: 'badge-error',
     cancelled: 'badge-error badge-outline',
 }[status] ?? 'badge-ghost');
+
+const paymentMethodLabel = (method) => ({
+    card: 'Karta',
+    bank_transfer: 'Prevod',
+}[method] ?? '—');
 
 const formatRange = formatReservationRange;
 

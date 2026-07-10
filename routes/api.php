@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\AreaController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ForgotPasswordController;
+use App\Http\Controllers\NexiWebhookController;
 use App\Http\Controllers\PlaygroundController;
 use App\Http\Controllers\PublicSettingsController;
 use App\Http\Controllers\ReservationController;
@@ -44,10 +45,17 @@ Route::middleware(['throttle:api'])->group(function () {
         Route::post('/', [ReservationController::class, 'store'])
             ->middleware(['throttle:10,60']); // 10 attempts per hour
         Route::post('/{id}/verify/{token}', [ReservationController::class, 'verify']);
+        Route::get('/{reservation}/payment-status', [ReservationController::class, 'paymentStatus'])
+            ->middleware(['throttle:30,60']);
     });
 
     Route::get('/public-settings', [PublicSettingsController::class, 'index']);
 });
+
+// Server-to-server callback from Nexi - own throttle, no auth (the gateway
+// can't authenticate as us). Never trusted directly, see NexiWebhookController.
+Route::post('/webhooks/nexi', [NexiWebhookController::class, 'handle'])
+    ->middleware(['throttle:60,1']);
 
 Route::middleware(['auth:sanctum', 'throttle:api', 'verified'])->group(function () {
     Route::prefix('user/two-factor-authentication')->group(function () {

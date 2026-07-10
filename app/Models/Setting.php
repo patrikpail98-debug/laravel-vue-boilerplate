@@ -23,6 +23,7 @@ class Setting extends Model
     const string CONTACT_HOURS_KEY = 'contact.hours';
     const string CONTACT_LATITUDE_KEY = 'contact.latitude';
     const string CONTACT_LONGITUDE_KEY = 'contact.longitude';
+    const string SPORT_NOTIFICATION_EMAIL_KEY = 'notifications.sport_email';
 
     /**
      * Setting keys that are safe to expose to unauthenticated visitors

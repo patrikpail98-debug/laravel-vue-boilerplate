@@ -63,6 +63,7 @@
                         <th class="bg-base-200">Max. dĺžka</th>
                         <th class="bg-base-200">Horizont</th>
                         <th class="bg-base-200">Aktívne</th>
+                        <th class="bg-base-200">Platba kartou</th>
                         <th class="bg-base-200 text-right">Akcie</th>
                     </tr>
                     </thead>
@@ -84,6 +85,11 @@
                                 {{ playground.is_active ? 'Áno' : 'Nie' }}
                             </span>
                         </td>
+                        <td>
+                            <span class="badge" :class="playground.allow_card_payment ? 'badge-success' : 'badge-ghost'">
+                                {{ playground.allow_card_payment ? 'Áno' : 'Nie' }}
+                            </span>
+                        </td>
                         <td class="text-right space-x-1">
                             <button class="btn btn-sm btn-ghost" @click="openEditPlaygroundModal(playground)">
                                 <PencilIcon class="w-4 h-4"/>
@@ -94,7 +100,7 @@
                         </td>
                     </tr>
                     <tr v-if="!playgrounds.length">
-                        <td colspan="8" class="text-center text-base-content/50 py-8">Žiadne ihriská.</td>
+                        <td colspan="9" class="text-center text-base-content/50 py-8">Žiadne ihriská.</td>
                     </tr>
                     </tbody>
                 </table>
@@ -199,6 +205,11 @@
                     <label class="flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" class="checkbox" v-model="playgroundForm.is_active"/>
                         Aktívne (viditeľné na rezerváciu)
+                    </label>
+
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" class="checkbox" v-model="playgroundForm.allow_card_payment"/>
+                        Povoliť platbu kartou (platba prevodom je vždy dostupná)
                     </label>
 
                     <div class="modal-action">
@@ -356,6 +367,7 @@ const playgroundForm = ref({
     max_duration_minutes: 120,
     max_horizon_days: 60,
     is_active: true,
+    allow_card_payment: false,
     latitude: null,
     longitude: null,
     opening_hours: buildDefaultOpeningHours(),
@@ -372,6 +384,7 @@ const openCreatePlaygroundModal = () => {
         max_duration_minutes: 120,
         max_horizon_days: 60,
         is_active: true,
+        allow_card_payment: false,
         latitude: null,
         longitude: null,
         opening_hours: buildDefaultOpeningHours(),
@@ -400,6 +413,7 @@ const openEditPlaygroundModal = (playground) => {
         max_duration_minutes: playground.max_duration_minutes,
         max_horizon_days: playground.max_horizon_days,
         is_active: playground.is_active,
+        allow_card_payment: playground.allow_card_payment,
         latitude: playground.latitude !== null ? Number(playground.latitude) : null,
         longitude: playground.longitude !== null ? Number(playground.longitude) : null,
         opening_hours: openingHours,

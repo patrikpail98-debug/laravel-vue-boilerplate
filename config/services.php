@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'nexi' => [
+        'base_url' => env('NEXI_BASE_URL', 'https://stg-ta.nexigroup.com/api/phoenix-0.0/psp/api/v1'),
+        'api_key' => env('NEXI_API_KEY'),
+    ],
+
 ];

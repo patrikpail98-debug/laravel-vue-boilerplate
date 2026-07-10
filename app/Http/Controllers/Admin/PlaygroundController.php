@@ -87,6 +87,7 @@ class PlaygroundController extends Controller
             'max_horizon_days' => 'required|integer|min:1|max:365',
             'max_duration_minutes' => 'required|integer|min:30|max:1440',
             'is_active' => 'required|boolean',
+            'allow_card_payment' => 'required|boolean',
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
             'opening_hours' => 'nullable|array',

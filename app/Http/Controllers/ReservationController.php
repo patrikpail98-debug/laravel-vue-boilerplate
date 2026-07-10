@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\PaymentGatewayException;
 use App\Mail\ReservationPaymentMail;
 use App\Mail\ReservationVerificationMail;
 use App\Models\Playground;
 use App\Models\Reservation;
+use App\Services\NexiPaymentService;
 use App\Services\ReservationService;
 use App\Traits\JsonResponseTrait;
 use Illuminate\Http\JsonResponse;
@@ -33,13 +35,19 @@ class ReservationController extends Controller
             'customer_phone' => 'required|string|max:30',
             'start_time' => 'required|date',
             'end_time' => 'required|date',
+            'payment_method' => 'required|in:' . Reservation::PAYMENT_METHOD_BANK_TRANSFER . ',' . Reservation::PAYMENT_METHOD_CARD,
         ]);
 
         $service = ReservationService::instance();
+        $isCard = $validated['payment_method'] === Reservation::PAYMENT_METHOD_CARD;
 
         try {
-            $reservation = DB::transaction(function () use ($validated, $service, $request) {
+            $reservation = DB::transaction(function () use ($validated, $service, $request, $isCard) {
                 $playground = Playground::query()->lockForUpdate()->findOrFail($validated['playground_id']);
+
+                if ($isCard && !$playground->allow_card_payment) {
+                    throw new InvalidArgumentException('Toto ihrisko neumožňuje platbu kartou.');
+                }
 
                 // The frontend sends naive wall-clock times (no offset) meaning
                 // facility-local time, e.g. "14:00" at the ground itself - parse
@@ -59,12 +67,31 @@ class ReservationController extends Controller
                     'end_time' => $end,
                     'variable_symbol' => $service->generateVariableSymbol(),
                     'total_price' => $price,
-                    'status' => Reservation::STATUS_UNVERIFIED,
-                    'verification_token' => $service->generateVerificationToken(),
+                    'payment_method' => $validated['payment_method'],
+                    // Card payments skip the email-verification hold: the hosted
+                    // payment page (3DS) itself is the proof of a genuine attempt.
+                    'status' => $isCard ? Reservation::STATUS_AWAITING_PAYMENT : Reservation::STATUS_UNVERIFIED,
+                    'verification_token' => $isCard ? null : $service->generateVerificationToken(),
                 ]);
             });
         } catch (InvalidArgumentException $e) {
             return $this->errorResponse(['message' => $e->getMessage()], 422);
+        }
+
+        if ($isCard) {
+            try {
+                $paymentUrl = NexiPaymentService::instance()->initiate($reservation);
+            } catch (PaymentGatewayException $e) {
+                // Don't leave a dead slot hold behind if we couldn't even start the payment.
+                $reservation->update(['status' => Reservation::STATUS_CANCELLED]);
+                return $this->errorResponse(['message' => $e->getMessage()], 502);
+            }
+
+            return $this->successResponse([
+                'message' => 'Presmerúvame Vás na platobnú bránu.',
+                'reservation' => $reservation,
+                'payment_url' => $paymentUrl,
+            ], 201);
         }
 
         Mail::to($reservation->customer_email)->send(new ReservationVerificationMail($reservation));
@@ -73,6 +100,29 @@ class ReservationController extends Controller
             'message' => 'Rezervácia bola vytvorená. Na Váš e-mail sme poslali potvrdzujúci odkaz.',
             'reservation' => $reservation,
         ], 201);
+    }
+
+    /**
+     * Polled by the frontend return page after a card-payment redirect.
+     * Re-verifies against Nexi itself (via NexiPaymentService) rather than
+     * trusting the redirect's query string - see NexiPaymentService docblock.
+     */
+    public function paymentStatus(Request $request, Reservation $reservation): JsonResponse
+    {
+        $validated = $request->validate([
+            'order_id' => 'required|string',
+        ]);
+
+        $verified = NexiPaymentService::instance()->verifyAndSync($validated['order_id']);
+
+        if (!$verified || $verified->id !== $reservation->id) {
+            return $this->errorResponse(['message' => 'Neplatná platobná transakcia.'], 404);
+        }
+
+        return $this->successResponse([
+            'status' => $verified->status,
+            'reservation' => $verified,
+        ]);
     }
 
     /**

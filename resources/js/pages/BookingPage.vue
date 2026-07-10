@@ -26,7 +26,7 @@
 
                     <div class="divider"></div>
 
-                    <form @submit.prevent="submit" class="space-y-4">
+                    <form @submit.prevent="startCheckout" class="space-y-4">
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend">Meno a priezvisko</legend>
                             <input type="text" class="input input-bordered w-full" v-model="form.customer_name" required/>
@@ -42,31 +42,60 @@
 
                         <button class="btn btn-primary btn-block" :disabled="!selection || loading">
                             <span v-if="loading" class="loading loading-spinner"></span>
-                            Odoslať rezerváciu
+                            Odoslať a rezervovať
                         </button>
                     </form>
                 </div>
             </div>
         </div>
+
+        <!-- Payment method choice -->
+        <dialog :class="{'modal-open': showPaymentModal}" class="modal">
+            <div class="modal-box">
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" @click="showPaymentModal = false">✕</button>
+                <h3 class="font-bold text-lg mb-1">Spôsob platby</h3>
+                <p class="text-sm text-base-content/70 mb-4">Vyberte, akým spôsobom chcete rezerváciu zaplatiť.</p>
+
+                <div class="grid gap-3">
+                    <button type="button" class="btn btn-outline btn-primary justify-start h-auto py-3 normal-case"
+                            :disabled="loading" @click="submit('card')">
+                        <div class="text-left">
+                            <div class="font-semibold">Platba kartou</div>
+                            <div class="text-xs font-normal opacity-70">Okamžitá platba online, rezervácia je potvrdená hneď po zaplatení.</div>
+                        </div>
+                    </button>
+                    <button type="button" class="btn btn-outline justify-start h-auto py-3 normal-case"
+                            :disabled="loading" @click="submit('bank_transfer')">
+                        <div class="text-left">
+                            <div class="font-semibold">Platba prevodom</div>
+                            <div class="text-xs font-normal opacity-70">Platobné údaje Vám pošleme e-mailom po potvrdení e-mailovej adresy.</div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </dialog>
     </div>
 </template>
 
 <script setup>
-import {reactive, ref} from 'vue';
+import {onMounted, reactive, ref} from 'vue';
 import {useRoute} from 'vue-router';
 import http from '@/http.js';
 import SlotPicker from '@/components/ui/SlotPicker.vue';
 import {showErrorToast} from '../constants/toast.js';
+import {useAuthStore} from '@/stores/auth.js';
 import 'notyf/notyf.min.css';
 
 const route = useRoute();
+const authStore = useAuthStore();
 const playgroundId = route.params.playgroundId;
 
-const playgroundInfo = reactive({name: '', area_name: ''});
+const playgroundInfo = reactive({name: '', area_name: '', allowCardPayment: false});
 const rules = reactive({maxHorizonDays: 60, maxDurationMinutes: 120, pricePer30Min: 0});
 const selection = ref(null);
 const loading = ref(false);
 const submitted = ref('');
+const showPaymentModal = ref(false);
 
 const form = reactive({
     customer_name: '',
@@ -77,12 +106,25 @@ const form = reactive({
 const onSlotPickerLoaded = (data) => {
     playgroundInfo.name = data.playground?.name ?? '';
     playgroundInfo.area_name = data.playground?.area_name ?? '';
+    playgroundInfo.allowCardPayment = data.playground?.allow_card_payment ?? false;
     rules.maxHorizonDays = data.max_horizon_days ?? rules.maxHorizonDays;
     rules.maxDurationMinutes = data.max_duration_minutes ?? rules.maxDurationMinutes;
     rules.pricePer30Min = data.price_per_30min ?? rules.pricePer30Min;
 };
 
-const submit = async () => {
+// Facilities without card payment enabled skip the choice entirely and keep
+// today's bank-transfer-only flow; only card-enabled facilities show the modal.
+const startCheckout = () => {
+    if (!selection.value) return;
+
+    if (playgroundInfo.allowCardPayment) {
+        showPaymentModal.value = true;
+    } else {
+        submit('bank_transfer');
+    }
+};
+
+const submit = async (paymentMethod) => {
     if (!selection.value) return;
 
     loading.value = true;
@@ -97,6 +139,7 @@ const submit = async () => {
                 customer_phone: form.customer_phone,
                 start_time: selection.value.start_time,
                 end_time: selection.value.end_time,
+                payment_method: paymentMethod,
             }),
         });
 
@@ -106,6 +149,13 @@ const submit = async () => {
             throw new Error(data.message ?? 'Rezerváciu sa nepodarilo vytvoriť.');
         }
 
+        if (paymentMethod === 'card' && data.payment_url) {
+            // Full redirect to the Nexi hosted page - leaving the SPA on purpose.
+            window.location.href = data.payment_url;
+            return;
+        }
+
+        showPaymentModal.value = false;
         submitted.value = data.message;
     } catch (error) {
         showErrorToast(error.message ?? 'Rezerváciu sa nepodarilo vytvoriť.');
@@ -113,4 +163,11 @@ const submit = async () => {
         loading.value = false;
     }
 };
+
+onMounted(() => {
+    if (authStore.isAuthenticated && authStore.user) {
+        form.customer_name = authStore.user.name ?? '';
+        form.customer_email = authStore.user.email ?? '';
+    }
+});
 </script>

@@ -20,18 +20,26 @@ class ExpireUnverifiedReservations extends Command
      *
      * @var string
      */
-    protected $description = 'Cancels unverified reservations whose email confirmation hold has expired, freeing their slot';
+    protected $description = 'Cancels reservations whose hold (email confirmation or card-payment attempt) has expired, freeing their slot';
 
     /**
      * Execute the console command.
      */
     public function handle(): void
     {
-        $count = Reservation::query()
+        $unverifiedCount = Reservation::query()
             ->where('status', Reservation::STATUS_UNVERIFIED)
             ->where('created_at', '<', Carbon::now()->subMinutes(Reservation::HOLD_MINUTES))
             ->update(['status' => Reservation::STATUS_CANCELLED]);
 
-        $this->info("Expired {$count} unverified reservation(s).");
+        // Abandoned card-payment attempts (customer never finished the hosted
+        // page, or Nexi never called back) - free the slot once the longer
+        // payment hold window elapses.
+        $awaitingPaymentCount = Reservation::query()
+            ->where('status', Reservation::STATUS_AWAITING_PAYMENT)
+            ->where('created_at', '<', Carbon::now()->subMinutes(Reservation::PAYMENT_HOLD_MINUTES))
+            ->update(['status' => Reservation::STATUS_CANCELLED]);
+
+        $this->info("Expired {$unverifiedCount} unverified and {$awaitingPaymentCount} awaiting-payment reservation(s).");
     }
 }

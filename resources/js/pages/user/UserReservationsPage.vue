@@ -56,6 +56,7 @@ const loading = ref(true);
 
 const statuses = [
     {value: 'unverified', label: 'Čaká na overenie e-mailu'},
+    {value: 'awaiting_payment', label: 'Čaká na platbu kartou'},
     {value: 'pending_approval', label: 'Čaká na platbu'},
     {value: 'approved', label: 'Schválené'},
     {value: 'rejected', label: 'Zamietnuté'},
@@ -66,6 +67,7 @@ const statusLabel = (value) => statuses.find(s => s.value === value)?.label ?? v
 
 const statusBadgeClass = (status) => ({
     unverified: 'badge-ghost',
+    awaiting_payment: 'badge-warning',
     pending_approval: 'badge-warning',
     approved: 'badge-success',
     rejected: 'badge-error',
