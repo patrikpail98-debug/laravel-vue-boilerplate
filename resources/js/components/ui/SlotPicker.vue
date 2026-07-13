@@ -1,16 +1,33 @@
 <!-- resources/js/components/ui/SlotPicker.vue -->
 <template>
     <div>
-        <div class="flex gap-2 overflow-x-auto pb-2 mb-4 date-range-picker">
-            <button v-for="day in days" :key="day.iso" type="button"
-                    class="flex flex-col items-center justify-center rounded-box px-3 py-2 min-w-16 border"
-                    :class="dayClass(day)"
-                    :disabled="isDayUnavailable(day.iso)"
-                    :title="isDayUnavailable(day.iso) ? (dayStatus[day.iso]?.closed ? 'Zatvorené' : 'Obsadené') : null"
-                    @click="selectDate(day.iso)">
-                <span class="text-xs uppercase">{{ day.weekday }}</span>
-                <span class="calendar-day font-semibold" :class="{today: day.isToday}">{{ day.dayNumber }}</span>
-            </button>
+        <div class="mb-4">
+            <div class="flex items-center justify-between mb-2">
+                <button type="button" class="btn btn-sm btn-circle btn-ghost" :disabled="!canGoPrev"
+                        aria-label="Predchádzajúci mesiac" @click="goPrevMonth">
+                    <ChevronLeftIcon class="w-5 h-5"/>
+                </button>
+                <span class="font-semibold capitalize">{{ monthLabel }}</span>
+                <button type="button" class="btn btn-sm btn-circle btn-ghost" :disabled="!canGoNext"
+                        aria-label="Nasledujúci mesiac" @click="goNextMonth">
+                    <ChevronRightIcon class="w-5 h-5"/>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-7 gap-1 text-center text-xs uppercase text-base-content/60 mb-1">
+                <span v-for="wd in weekdayLabels" :key="wd">{{ wd }}</span>
+            </div>
+
+            <div class="grid grid-cols-7 gap-1">
+                <button v-for="cell in calendarDays" :key="cell.iso" type="button"
+                        class="aspect-square flex items-center justify-center rounded-box border text-sm"
+                        :class="dayClass(cell)"
+                        :disabled="!isSelectableDay(cell)"
+                        :title="cellTitle(cell)"
+                        @click="selectDate(cell.iso)">
+                    <span :class="{'font-bold underline': cell.isToday}">{{ cell.dayNumber }}</span>
+                </button>
+            </div>
         </div>
 
         <div v-if="loading" class="flex justify-center py-8">
@@ -48,6 +65,7 @@
 
 <script setup>
 import {computed, onMounted, ref, watch} from 'vue';
+import {ChevronLeftIcon, ChevronRightIcon} from '@heroicons/vue/24/outline';
 import http from '@/http.js';
 import {showErrorToast} from '../../constants/toast.js';
 
@@ -65,7 +83,19 @@ const emit = defineEmits(['update:selection', 'loaded']);
 const FALLBACK_OPEN_HOUR = 7;
 const FALLBACK_CLOSE_HOUR = 22;
 
-const days = ref([]);
+const weekdayLabels = ['Po', 'Ut', 'St', 'Št', 'Pi', 'So', 'Ne'];
+
+// Bookable window: today through today + horizonDayCount - 1. Populated once
+// in initDays() from fetchDayAvailability(), which reflects the playground's
+// real max_horizon_days from the backend.
+const horizonStart = ref(null); // Date, today at local midnight
+const horizonDayCount = ref(0);
+
+// Month currently shown in the calendar grid - independent from the horizon
+// bounds so the user can page between months with the nav arrows.
+const viewYear = ref(new Date().getFullYear());
+const viewMonth = ref(new Date().getMonth()); // 0-indexed
+
 const selectedDate = ref(null);
 const bookedIso = ref([]);
 const dayOpeningHours = ref(null); // {is_closed, opens_at: 'HH:MM', closes_at: 'HH:MM'} | null
@@ -80,41 +110,115 @@ const isDayUnavailable = (iso) => {
     return Boolean(status?.closed || status?.fully_booked);
 };
 
-const dayClass = (day) => {
-    if (isDayUnavailable(day.iso)) {
-        return 'bg-base-300 text-base-content/40 border-base-300 cursor-not-allowed';
-    }
-    return day.iso === selectedDate.value ? 'bg-primary text-primary-content border-primary' : 'border-base-300 hover:bg-base-200';
-};
-
-// dayCount is the number of calendar days to show, starting today - driven by
-// the day-availability response (which already reflects the playground's real
-// max_horizon_days from the backend) rather than the maxHorizonDays prop,
-// since that prop only arrives via the "loaded" event emitted from the first
-// fetchAvailability() call, which happens after this runs - using it directly
-// here would always build the calendar from its stale 60-day default.
-const buildDays = (dayCount) => {
-    const list = [];
-    const weekdays = ['Ne', 'Po', 'Ut', 'St', 'Št', 'Pi', 'So'];
-    for (let i = 0; i < dayCount; i++) {
-        const d = new Date();
-        d.setHours(0, 0, 0, 0);
-        d.setDate(d.getDate() + i);
-        list.push({
-            iso: toDateKey(d),
-            weekday: weekdays[d.getDay()],
-            dayNumber: d.getDate(),
-            isToday: i === 0,
-        });
-    }
-    days.value = list;
-};
-
 const toDateKey = (date) => {
     const y = date.getFullYear();
     const m = String(date.getMonth() + 1).padStart(2, '0');
     const d = String(date.getDate()).padStart(2, '0');
     return `${y}-${m}-${d}`;
+};
+
+const isoAtOffset = (offset) => {
+    const d = new Date(horizonStart.value);
+    d.setDate(d.getDate() + offset);
+    return toDateKey(d);
+};
+
+const horizonEndIso = computed(() => {
+    if (!horizonStart.value || !horizonDayCount.value) return null;
+    return isoAtOffset(horizonDayCount.value - 1);
+});
+
+const inHorizon = (iso) => {
+    if (!horizonStart.value || !horizonDayCount.value) return false;
+    return iso >= toDateKey(horizonStart.value) && iso <= horizonEndIso.value;
+};
+
+// Flat 6-week (42 day) grid for the visible month, Monday-first. Days
+// belonging to the previous/next month are included (dimmed, inert) so the
+// grid keeps a consistent shape.
+const calendarDays = computed(() => {
+    const year = viewYear.value;
+    const month = viewMonth.value;
+    const firstOfMonth = new Date(year, month, 1);
+    const firstWeekday = (firstOfMonth.getDay() + 6) % 7; // Monday = 0
+    const gridStart = new Date(year, month, 1 - firstWeekday);
+    const todayIso = toDateKey(new Date());
+
+    const cells = [];
+    const cursor = new Date(gridStart);
+    for (let i = 0; i < 42; i++) {
+        cells.push({
+            iso: toDateKey(cursor),
+            dayNumber: cursor.getDate(),
+            inCurrentMonth: cursor.getMonth() === month,
+            isToday: toDateKey(cursor) === todayIso,
+        });
+        cursor.setDate(cursor.getDate() + 1);
+    }
+    return cells;
+});
+
+const isSelectableDay = (cell) => cell.inCurrentMonth && inHorizon(cell.iso) && !isDayUnavailable(cell.iso);
+
+const dayClass = (cell) => {
+    if (!cell.inCurrentMonth) {
+        return 'text-base-content/20 border-transparent';
+    }
+    if (!inHorizon(cell.iso) || isDayUnavailable(cell.iso)) {
+        return 'bg-base-300 text-base-content/40 border-base-300 cursor-not-allowed';
+    }
+    return cell.iso === selectedDate.value ? 'bg-primary text-primary-content border-primary' : 'border-base-300 hover:bg-base-200';
+};
+
+const cellTitle = (cell) => {
+    if (!cell.inCurrentMonth || !inHorizon(cell.iso) || !isDayUnavailable(cell.iso)) return null;
+    return dayStatus.value[cell.iso]?.closed ? 'Zatvorené' : 'Obsadené';
+};
+
+const monthLabel = computed(() => {
+    const label = new Intl.DateTimeFormat('sk-SK', {month: 'long', year: 'numeric'}).format(new Date(viewYear.value, viewMonth.value, 1));
+    return label.charAt(0).toUpperCase() + label.slice(1);
+});
+
+const startMonthKey = computed(() => horizonStart.value ? `${horizonStart.value.getFullYear()}-${horizonStart.value.getMonth()}` : null);
+const endMonthKey = computed(() => {
+    if (!horizonEndIso.value) return null;
+    const [y, m] = horizonEndIso.value.split('-').map(Number);
+    return `${y}-${m - 1}`;
+});
+const viewMonthKey = computed(() => `${viewYear.value}-${viewMonth.value}`);
+
+const canGoPrev = computed(() => startMonthKey.value !== null && viewMonthKey.value !== startMonthKey.value);
+const canGoNext = computed(() => endMonthKey.value !== null && viewMonthKey.value !== endMonthKey.value);
+
+const goPrevMonth = () => {
+    if (!canGoPrev.value) return;
+    let m = viewMonth.value - 1;
+    let y = viewYear.value;
+    if (m < 0) {
+        m = 11;
+        y -= 1;
+    }
+    viewMonth.value = m;
+    viewYear.value = y;
+};
+
+const goNextMonth = () => {
+    if (!canGoNext.value) return;
+    let m = viewMonth.value + 1;
+    let y = viewYear.value;
+    if (m > 11) {
+        m = 0;
+        y += 1;
+    }
+    viewMonth.value = m;
+    viewYear.value = y;
+};
+
+const setViewToIso = (iso) => {
+    const [y, m] = iso.split('-').map(Number);
+    viewYear.value = y;
+    viewMonth.value = m - 1;
 };
 
 const slots = computed(() => {
@@ -159,7 +263,7 @@ const slotClass = (slot) => {
 };
 
 const selectDate = async (iso) => {
-    if (isDayUnavailable(iso)) return;
+    if (!inHorizon(iso) || isDayUnavailable(iso)) return;
 
     selectedDate.value = iso;
     selection.value = [];
@@ -275,14 +379,24 @@ const toLocalIso = (date) => {
 };
 
 const firstAvailableDayIso = () => {
-    const found = days.value.find(day => !isDayUnavailable(day.iso));
-    return found ? found.iso : days.value[0]?.iso;
+    for (let i = 0; i < horizonDayCount.value; i++) {
+        const iso = isoAtOffset(i);
+        if (!isDayUnavailable(iso)) return iso;
+    }
+    return isoAtOffset(0);
 };
 
 const initDays = async () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    horizonStart.value = today;
+
     const dayCount = await fetchDayAvailability();
-    buildDays(dayCount ?? props.maxHorizonDays + 1);
-    selectDate(firstAvailableDayIso());
+    horizonDayCount.value = dayCount ?? props.maxHorizonDays + 1;
+
+    const firstIso = firstAvailableDayIso();
+    setViewToIso(firstIso);
+    await selectDate(firstIso);
 };
 
 watch(() => props.playgroundId, initDays);

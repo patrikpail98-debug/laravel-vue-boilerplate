@@ -27,16 +27,25 @@
                     <div class="divider"></div>
 
                     <form @submit.prevent="startCheckout" class="space-y-4">
+                        <p class="text-xs text-base-content/60">
+                            Polia označené <span class="text-error" aria-hidden="true">*</span> sú povinné.
+                        </p>
                         <fieldset class="fieldset">
-                            <legend class="fieldset-legend">Meno a priezvisko</legend>
+                            <legend class="fieldset-legend">
+                                Meno a priezvisko <span class="text-error" aria-hidden="true">*</span><span class="sr-only"> (povinné)</span>
+                            </legend>
                             <input type="text" class="input input-bordered w-full" v-model="form.customer_name" required/>
                         </fieldset>
                         <fieldset class="fieldset">
-                            <legend class="fieldset-legend">E-mail</legend>
+                            <legend class="fieldset-legend">
+                                E-mail <span class="text-error" aria-hidden="true">*</span><span class="sr-only"> (povinné)</span>
+                            </legend>
                             <input type="email" class="input input-bordered w-full" v-model="form.customer_email" required/>
                         </fieldset>
                         <fieldset class="fieldset">
-                            <legend class="fieldset-legend">Telefón</legend>
+                            <legend class="fieldset-legend">
+                                Telefón <span class="text-error" aria-hidden="true">*</span><span class="sr-only"> (povinné)</span>
+                            </legend>
                             <input type="tel" class="input input-bordered w-full" v-model="form.customer_phone" required/>
                         </fieldset>
 

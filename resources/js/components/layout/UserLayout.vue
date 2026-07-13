@@ -13,7 +13,13 @@
             </div>
             <ul class="menu p-4">
                 <li>
-                    <router-link to="/user" class="flex items-center">
+                    <router-link to="/user/dashboard" class="flex items-center">
+                        <ChartBarIcon class="w-5 h-5"/>
+                        Prehľad
+                    </router-link>
+                </li>
+                <li>
+                    <router-link to="/user/profile" class="flex items-center">
                         <UserCircleIcon class="w-5 h-5"/>
                         Môj profil
                     </router-link>
@@ -74,7 +80,7 @@
 
 <script setup>
 import {computed, ref, watch} from 'vue';
-import {CalendarIcon, UserCircleIcon} from '@heroicons/vue/24/outline';
+import {CalendarIcon, ChartBarIcon, UserCircleIcon} from '@heroicons/vue/24/outline';
 import {useAuthStore} from '@/stores/auth';
 import {useRouter} from 'vue-router';
 

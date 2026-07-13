@@ -126,6 +126,7 @@ Route::middleware(['auth:sanctum', 'throttle:api', 'verified'])->group(function 
 
         Route::prefix('reservations')->middleware('permission:manage_reservations')->group(function () {
             Route::get('/', [AdminReservationController::class, 'index']);
+            Route::get('/export', [AdminReservationController::class, 'export']);
             Route::put('/{reservation}/approve', [AdminReservationController::class, 'approve']);
             Route::put('/{reservation}/reject', [AdminReservationController::class, 'reject']);
             Route::put('/{reservation}/cancel', [AdminReservationController::class, 'cancel']);

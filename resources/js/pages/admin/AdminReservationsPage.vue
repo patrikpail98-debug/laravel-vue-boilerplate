@@ -1,11 +1,27 @@
 <template>
     <div class="p-6 bg-base-100 rounded-box shadow-md">
-        <div class="flex justify-between items-center mb-6">
+        <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
             <h1 class="text-2xl font-bold text-primary">Rezervácie</h1>
             <select v-model="statusFilter" class="select select-bordered" @change="fetchReservations">
                 <option value="">Všetky stavy</option>
                 <option v-for="status in statuses" :key="status.value" :value="status.value">{{ status.label }}</option>
             </select>
+        </div>
+
+        <div class="flex flex-wrap items-end gap-3 mb-6 p-4 bg-base-200 rounded-box">
+            <fieldset class="fieldset">
+                <legend class="fieldset-legend">Report platieb od</legend>
+                <input type="date" class="input input-bordered" v-model="reportFrom"/>
+            </fieldset>
+            <fieldset class="fieldset">
+                <legend class="fieldset-legend">do</legend>
+                <input type="date" class="input input-bordered" v-model="reportTo"/>
+            </fieldset>
+            <button type="button" class="btn btn-primary" :disabled="!reportFrom || !reportTo || exporting" @click="exportCsv">
+                <span v-if="exporting" class="loading loading-spinner"></span>
+                <DocumentArrowDownIcon v-else class="w-4 h-4"/>
+                Exportovať CSV
+            </button>
         </div>
 
         <div class="overflow-x-auto">
@@ -102,6 +118,9 @@ import {formatReservationRange} from '../../utils/datetime.js';
 
 const reservations = ref([]);
 const statusFilter = ref('');
+const reportFrom = ref('');
+const reportTo = ref('');
+const exporting = ref(false);
 
 const statuses = [
     {value: 'unverified', label: 'Čaká na overenie e-mailu'},
@@ -184,6 +203,34 @@ const downloadPaymentSummary = async (reservation) => {
         window.URL.revokeObjectURL(url);
     } catch (error) {
         showErrorToast(error.message ?? 'Nepodarilo sa vygenerovať súhrn platby.');
+    }
+};
+
+const exportCsv = async () => {
+    exporting.value = true;
+    try {
+        const params = new URLSearchParams({from: reportFrom.value, to: reportTo.value});
+        if (statusFilter.value) params.set('status', statusFilter.value);
+
+        const response = await http.request(`/api/admin/reservations/export?${params.toString()}`);
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.message ?? 'Nepodarilo sa vygenerovať report.');
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `report-platieb-${reportFrom.value}_${reportTo.value}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+    } catch (error) {
+        showErrorToast(error.message ?? 'Nepodarilo sa vygenerovať report.');
+    } finally {
+        exporting.value = false;
     }
 };
 

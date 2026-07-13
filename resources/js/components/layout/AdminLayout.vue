@@ -18,12 +18,6 @@
                         Prehľad
                     </router-link>
                 </li>
-                <li v-if="authStore.hasPermission('manage_content')">
-                    <router-link to="/admin/content" class="flex items-center">
-                        <CalendarIcon class="w-5 h-5"/>
-                        Obsah
-                    </router-link>
-                </li>
                 <li v-if="authStore.hasPermission('manage_facilities')">
                     <router-link to="/admin/facilities" class="flex items-center">
                         <MapPinIcon class="w-5 h-5"/>

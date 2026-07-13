@@ -12,7 +12,9 @@ use App\Traits\JsonResponseTrait;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Mail;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReservationController extends Controller
 {
@@ -103,6 +105,83 @@ class ReservationController extends Controller
         return response($pdf, 200, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'attachment; filename="suhrn-platby-' . $reservation->variable_symbol . '.pdf"',
+        ]);
+    }
+
+    /**
+     * CSV report of reservations/payments whose reservation date (start_time)
+     * falls within the given range - for admin bookkeeping/reconciliation.
+     */
+    public function export(Request $request): StreamedResponse
+    {
+        $validated = $request->validate([
+            'from' => 'required|date',
+            'to' => 'required|date|after_or_equal:from',
+            'status' => 'nullable|string',
+        ]);
+
+        $tz = config('app.facility_timezone');
+        $from = Carbon::parse($validated['from'], $tz)->startOfDay()->utc();
+        $to = Carbon::parse($validated['to'], $tz)->endOfDay()->utc();
+
+        $reservations = Reservation::query()
+            ->with(['playground.area'])
+            ->whereBetween('start_time', [$from, $to])
+            ->when($validated['status'] ?? null, fn($query, $status) => $query->where('status', $status))
+            ->orderBy('start_time')
+            ->get();
+
+        $statusLabels = [
+            Reservation::STATUS_UNVERIFIED => 'Čaká na overenie e-mailu',
+            Reservation::STATUS_AWAITING_PAYMENT => 'Čaká na platbu kartou',
+            Reservation::STATUS_PENDING_APPROVAL => 'Čaká na platbu',
+            Reservation::STATUS_APPROVED => 'Schválené',
+            Reservation::STATUS_REJECTED => 'Zamietnuté',
+            Reservation::STATUS_CANCELLED => 'Zrušené',
+        ];
+
+        $paymentMethodLabels = [
+            Reservation::PAYMENT_METHOD_CARD => 'Karta',
+            Reservation::PAYMENT_METHOD_BANK_TRANSFER => 'Prevod',
+        ];
+
+        $filename = 'report-platieb-' . $validated['from'] . '_' . $validated['to'] . '.csv';
+
+        return new StreamedResponse(function () use ($reservations, $statusLabels, $paymentMethodLabels) {
+            $handle = fopen('php://output', 'w');
+            // UTF-8 BOM so Excel renders Slovak diacritics correctly.
+            fwrite($handle, "\xEF\xBB\xBF");
+
+            fputcsv($handle, [
+                'Dátum a čas',
+                'Meno',
+                'E-mail',
+                'Ihrisko',
+                'Areál',
+                'Variabilný symbol',
+                'Suma (EUR)',
+                'Spôsob platby',
+                'Stav',
+            ], ';');
+
+            foreach ($reservations as $reservation) {
+                fputcsv($handle, [
+                    $reservation->startTimeLocal()->format('d.m.Y H:i') . '–' . $reservation->endTimeLocal()->format('H:i'),
+                    $reservation->customer_name,
+                    $reservation->customer_email,
+                    $reservation->playground?->name,
+                    $reservation->playground?->area?->name,
+                    $reservation->variable_symbol,
+                    number_format((float)$reservation->total_price, 2, ',', ''),
+                    $paymentMethodLabels[$reservation->payment_method] ?? $reservation->payment_method,
+                    $statusLabels[$reservation->status] ?? $reservation->status,
+                ], ';');
+            }
+
+            fclose($handle);
+        }, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ]);
     }
 }

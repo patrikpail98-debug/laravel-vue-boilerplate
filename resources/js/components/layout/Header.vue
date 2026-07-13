@@ -25,7 +25,7 @@
                     <router-link v-if="authStore.hasPermission('view_admin')" to="/admin" class="btn btn-secondary btn-sm hidden sm:inline-flex">
                         Administrácia
                     </router-link>
-                    <router-link v-else to="/user" class="btn btn-secondary btn-sm hidden sm:inline-flex">
+                    <router-link to="/user" class="btn btn-secondary btn-sm hidden sm:inline-flex">
                         Môj profil
                     </router-link>
                     <button type="button" class="btn btn-ghost btn-sm !text-primary-content hover:!bg-white/15" @click="logout">Odhlásiť sa</button>
@@ -46,9 +46,11 @@
                     <router-link :to="item.path" class="!text-primary-content hover:!bg-white/15 [&.router-link-exact-active]:!bg-secondary [&.router-link-exact-active]:!text-secondary-content"
                                  @click="mobileOpen = false">{{ item.label }}</router-link>
                 </li>
+                <li v-if="authStore.isAuthenticated && authStore.hasPermission('view_admin')">
+                    <router-link to="/admin" class="!text-primary-content hover:!bg-white/15" @click="mobileOpen = false">Administrácia</router-link>
+                </li>
                 <li v-if="authStore.isAuthenticated">
-                    <router-link v-if="authStore.hasPermission('view_admin')" to="/admin" class="!text-primary-content hover:!bg-white/15" @click="mobileOpen = false">Administrácia</router-link>
-                    <router-link v-else to="/user" class="!text-primary-content hover:!bg-white/15" @click="mobileOpen = false">Môj profil</router-link>
+                    <router-link to="/user" class="!text-primary-content hover:!bg-white/15" @click="mobileOpen = false">Môj profil</router-link>
                 </li>
             </ul>
         </nav>

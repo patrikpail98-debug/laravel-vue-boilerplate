@@ -182,6 +182,16 @@ const routes = [
         children: [
             {
                 path: '',
+                redirect: {name: 'user-dashboard'}
+            },
+            {
+                path: 'dashboard',
+                name: 'user-dashboard',
+                component: () => import('./pages/user/UserDashboardPage.vue'),
+                meta: {title: 'Prehľad'}
+            },
+            {
+                path: 'profile',
                 name: 'user-profile',
                 component: () => import('./pages/admin/AdminMyProfile.vue'),
                 meta: {title: 'Môj profil'}
@@ -246,7 +256,7 @@ router.beforeEach(async (to, from, next) => {
             // A logged-in user without admin access lands on their own
             // profile instead of a bare 404 when they try /admin/*.
             if (to.path.startsWith('/admin')) {
-                return next({name: 'user-profile'});
+                return next({name: 'user-dashboard'});
             }
             return next({name: 'not-found'});
         }
