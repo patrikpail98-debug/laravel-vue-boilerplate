@@ -17,6 +17,8 @@ use Illuminate\Support\Carbon;
  * @property string $customer_name
  * @property string $customer_email
  * @property string $customer_phone
+ * @property string|null $ico
+ * @property string|null $address
  * @property Carbon $start_time
  * @property Carbon $end_time
  * @property string $variable_symbol
@@ -68,6 +70,8 @@ class Reservation extends Model
         'customer_name',
         'customer_email',
         'customer_phone',
+        'ico',
+        'address',
         'start_time',
         'end_time',
         'variable_symbol',

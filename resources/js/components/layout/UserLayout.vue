@@ -25,6 +25,12 @@
                     </router-link>
                 </li>
                 <li>
+                    <router-link to="/user/details" class="flex items-center">
+                        <IdentificationIcon class="w-5 h-5"/>
+                        Moje údaje
+                    </router-link>
+                </li>
+                <li>
                     <router-link to="/user/reservations" class="flex items-center">
                         <CalendarIcon class="w-5 h-5"/>
                         Moje rezervácie
@@ -80,7 +86,7 @@
 
 <script setup>
 import {computed, ref, watch} from 'vue';
-import {CalendarIcon, ChartBarIcon, UserCircleIcon} from '@heroicons/vue/24/outline';
+import {CalendarIcon, ChartBarIcon, IdentificationIcon, UserCircleIcon} from '@heroicons/vue/24/outline';
 import {useAuthStore} from '@/stores/auth';
 import {useRouter} from 'vue-router';
 

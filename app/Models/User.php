@@ -18,7 +18,14 @@ use Laravel\Sanctum\HasApiTokens;
  * @property int $id
  * @property string $name
  * @property string $email
+ * @property string|null $phone
+ * @property string|null $street
+ * @property string|null $city
+ * @property string|null $postcode
+ * @property string|null $ico
  * @property boolean $is_blocked
+ * @property boolean $is_deleted
+ * @property Carbon|null $deleted_at
  * @property Carbon|null $email_verified_at
  * @property string $password
  * @property string $remember_token
@@ -41,6 +48,11 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $fillable = [
         'name',
         'email',
+        'phone',
+        'street',
+        'city',
+        'postcode',
+        'ico',
         'password',
         'two_factor_method',
         'two_factor_enabled',
@@ -77,6 +89,8 @@ class User extends Authenticatable implements MustVerifyEmail
             'two_factor_recovery_codes' => 'encrypted:collection',
             'two_factor_secret' => 'encrypted',
             'is_blocked' => 'boolean',
+            'is_deleted' => 'boolean',
+            'deleted_at' => 'datetime',
         ];
     }
 

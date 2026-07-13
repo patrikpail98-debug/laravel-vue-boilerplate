@@ -102,6 +102,12 @@ class AuthController extends Controller
             ]);
         }
 
+        if ($user->is_deleted) {
+            return $this->errorResponse([
+                'message' => 'Incorrect login details.'
+            ]);
+        }
+
         if (!$user->hasVerifiedEmail()) {
             return $this->errorResponse(['message' => 'not-verified'], 403);
         }

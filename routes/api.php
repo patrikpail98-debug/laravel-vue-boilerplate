@@ -48,6 +48,8 @@ Route::middleware(['throttle:api'])->group(function () {
         Route::post('/{id}/verify/{token}', [ReservationController::class, 'verify']);
         Route::get('/{reservation}/payment-status', [ReservationController::class, 'paymentStatus'])
             ->middleware(['throttle:30,60']);
+        Route::get('/payment/resume/{orderId}', [ReservationController::class, 'resumePayment'])
+            ->middleware(['throttle:30,60']);
     });
 
     Route::get('/public-settings', [PublicSettingsController::class, 'index']);
@@ -69,7 +71,10 @@ Route::middleware(['auth:sanctum', 'throttle:api', 'verified'])->group(function 
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [UserController::class, 'getAuthUser']);
     Route::put('/user/password', [UserController::class, 'updatePassword']);
+    Route::put('/user/contact-details', [UserController::class, 'updateContactDetails']);
+    Route::delete('/user/account', [UserController::class, 'deleteAccount']);
     Route::get('/user/reservations', [UserController::class, 'myReservations']);
+    Route::get('/user/reservations/{reservation}/payment-summary-pdf', [UserController::class, 'paymentSummaryPdf']);
 
     // Admin routes
     Route::prefix('admin')->middleware('role:admin,editor')->group(function () {

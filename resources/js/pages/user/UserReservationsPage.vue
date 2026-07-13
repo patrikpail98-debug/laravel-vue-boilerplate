@@ -15,6 +15,7 @@
                     <th class="bg-base-200">Suma</th>
                     <th class="bg-base-200">VS</th>
                     <th class="bg-base-200">Stav</th>
+                    <th class="bg-base-200 text-right">Akcie</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -30,9 +31,15 @@
                         <span class="badge" :class="statusBadgeClass(reservation.status)">{{ statusLabel(reservation.status) }}</span>
                         <p v-if="reservation.admin_note" class="text-xs text-base-content/60 mt-1">{{ reservation.admin_note }}</p>
                     </td>
+                    <td class="text-right">
+                        <button v-if="reservation.status === 'approved'" type="button" class="btn btn-sm btn-ghost"
+                                @click="downloadPaymentSummary(reservation)">
+                            <DocumentArrowDownIcon class="w-4 h-4"/> Súhrn platby (PDF)
+                        </button>
+                    </td>
                 </tr>
                 <tr v-if="!reservations.length">
-                    <td colspan="5" class="text-center text-base-content/50 py-8">Zatiaľ nemáte žiadne rezervácie.</td>
+                    <td colspan="6" class="text-center text-base-content/50 py-8">Zatiaľ nemáte žiadne rezervácie.</td>
                 </tr>
                 </tbody>
             </table>
@@ -46,6 +53,7 @@
 
 <script setup>
 import {onMounted, ref} from 'vue';
+import {DocumentArrowDownIcon} from '@heroicons/vue/24/outline';
 import 'notyf/notyf.min.css';
 import {showErrorToast} from '../../constants/toast.js';
 import http from '../../http.js';
@@ -75,6 +83,28 @@ const statusBadgeClass = (status) => ({
 }[status] ?? 'badge-ghost');
 
 const formatRange = formatReservationRange;
+
+const downloadPaymentSummary = async (reservation) => {
+    try {
+        const response = await http.request(`/api/user/reservations/${reservation.id}/payment-summary-pdf`);
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.message ?? 'Nepodarilo sa vygenerovať súhrn platby.');
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `suhrn-platby-${reservation.variable_symbol}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+    } catch (error) {
+        showErrorToast(error.message ?? 'Nepodarilo sa vygenerovať súhrn platby.');
+    }
+};
 
 onMounted(async () => {
     try {

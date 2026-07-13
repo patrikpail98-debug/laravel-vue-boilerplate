@@ -113,6 +113,11 @@ export const useAuthStore = defineStore('auth', {
                         id: userData.id,
                         name: userData.name,
                         email: userData.email,
+                        phone: userData.phone,
+                        street: userData.street,
+                        city: userData.city,
+                        postcode: userData.postcode,
+                        ico: userData.ico,
                         email_verified_at: userData.email_verified_at,
                         two_factor_enabled: userData.two_factor_enabled,
                         two_factor_method: userData.two_factor_method

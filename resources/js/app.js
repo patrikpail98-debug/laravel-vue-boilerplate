@@ -56,6 +56,12 @@ const routes = [
         meta: {public: true}
     },
     {
+        path: '/rezervacia/platba/pokracovat/:orderId',
+        name: 'reservations.payment-resume',
+        component: () => import('./pages/PaymentResumePage.vue'),
+        meta: {public: true}
+    },
+    {
         path: '/rezervacia/ihrisko/:playgroundId',
         name: 'reservations.playground-detail',
         component: () => import('./pages/PlaygroundDetailPage.vue'),
@@ -195,6 +201,12 @@ const routes = [
                 name: 'user-profile',
                 component: () => import('./pages/admin/AdminMyProfile.vue'),
                 meta: {title: 'Môj profil'}
+            },
+            {
+                path: 'details',
+                name: 'user-details',
+                component: () => import('./pages/user/UserDetailsPage.vue'),
+                meta: {title: 'Moje údaje'}
             },
             {
                 path: 'reservations',

@@ -32,7 +32,7 @@
                         </p>
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend">
-                                Meno a priezvisko <span class="text-error" aria-hidden="true">*</span><span class="sr-only"> (povinné)</span>
+                                Meno a priezvisko / názov firmy <span class="text-error" aria-hidden="true">*</span><span class="sr-only"> (povinné)</span>
                             </legend>
                             <input type="text" class="input input-bordered w-full" v-model="form.customer_name" required/>
                         </fieldset>
@@ -47,6 +47,30 @@
                                 Telefón <span class="text-error" aria-hidden="true">*</span><span class="sr-only"> (povinné)</span>
                             </legend>
                             <input type="tel" class="input input-bordered w-full" v-model="form.customer_phone" required/>
+                        </fieldset>
+                        <fieldset class="fieldset">
+                            <legend class="fieldset-legend">
+                                Ulica <span class="text-error" aria-hidden="true">*</span><span class="sr-only"> (povinné)</span>
+                            </legend>
+                            <input type="text" class="input input-bordered w-full" v-model="form.street" required/>
+                        </fieldset>
+                        <div class="grid grid-cols-2 gap-4">
+                            <fieldset class="fieldset">
+                                <legend class="fieldset-legend">
+                                    Mesto <span class="text-error" aria-hidden="true">*</span><span class="sr-only"> (povinné)</span>
+                                </legend>
+                                <input type="text" class="input input-bordered w-full" v-model="form.city" required/>
+                            </fieldset>
+                            <fieldset class="fieldset">
+                                <legend class="fieldset-legend">
+                                    PSČ <span class="text-error" aria-hidden="true">*</span><span class="sr-only"> (povinné)</span>
+                                </legend>
+                                <input type="text" class="input input-bordered w-full" v-model="form.postcode" required/>
+                            </fieldset>
+                        </div>
+                        <fieldset class="fieldset">
+                            <legend class="fieldset-legend">IČO</legend>
+                            <input type="text" class="input input-bordered w-full" v-model="form.ico"/>
                         </fieldset>
 
                         <button class="btn btn-primary btn-block" :disabled="!selection || loading">
@@ -110,6 +134,10 @@ const form = reactive({
     customer_name: '',
     customer_email: '',
     customer_phone: '',
+    street: '',
+    city: '',
+    postcode: '',
+    ico: '',
 });
 
 const onSlotPickerLoaded = (data) => {
@@ -146,6 +174,10 @@ const submit = async (paymentMethod) => {
                 customer_name: form.customer_name,
                 customer_email: form.customer_email,
                 customer_phone: form.customer_phone,
+                street: form.street,
+                city: form.city,
+                postcode: form.postcode,
+                ico: form.ico,
                 start_time: selection.value.start_time,
                 end_time: selection.value.end_time,
                 payment_method: paymentMethod,
@@ -177,6 +209,11 @@ onMounted(() => {
     if (authStore.isAuthenticated && authStore.user) {
         form.customer_name = authStore.user.name ?? '';
         form.customer_email = authStore.user.email ?? '';
+        form.customer_phone = authStore.user.phone ?? '';
+        form.street = authStore.user.street ?? '';
+        form.city = authStore.user.city ?? '';
+        form.postcode = authStore.user.postcode ?? '';
+        form.ico = authStore.user.ico ?? '';
     }
 });
 </script>
