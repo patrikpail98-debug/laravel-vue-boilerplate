@@ -30,6 +30,8 @@
 import {ref} from 'vue';
 import {useAuthStore} from '@/stores/auth';
 import {useRouter} from 'vue-router';
+import 'notyf/notyf.min.css';
+import {showErrorToast} from '../constants/toast.js';
 
 const authStore = useAuthStore();
 const router = useRouter();
@@ -42,7 +44,7 @@ const verifyCode = async () => {
         await authStore.verifyTfa(code.value);
         router.push(authStore.hasPermission('view_admin') ? '/admin' : '/user');
     } catch (error) {
-        alert('Neplatný kód.');
+        showErrorToast(error.message ?? 'Neplatný kód.');
     } finally {
         loading.value = false;
     }

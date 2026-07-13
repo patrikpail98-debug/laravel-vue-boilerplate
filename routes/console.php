@@ -14,4 +14,4 @@ Artisan::command('inspire', function () {
  * Schedule commands to run here
  */
 // Schedule::command(ExampleCommand::class)->hourly();
-Schedule::command(ExpireUnverifiedReservations::class)->everyMinute();
+Schedule::command(ExpireUnverifiedReservations::class)->everyMinute()->withoutOverlapping();

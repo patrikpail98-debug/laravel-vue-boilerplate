@@ -225,7 +225,18 @@ const isSaving = ref(false);
 
 // Function to handle form submission
 const updatePassword = async () => {
-    // Basic client-side check
+    // Mirrors the server's actual rule (Password::min(8)->mixedCase()->numbers()->symbols()
+    // in UserController::updatePassword) so a rejection shows up immediately
+    // instead of only after a round-trip to the server.
+    if (form.value.password.length < 8
+        || !/[a-z]/.test(form.value.password)
+        || !/[A-Z]/.test(form.value.password)
+        || !/[0-9]/.test(form.value.password)
+        || !/[^a-zA-Z0-9]/.test(form.value.password)) {
+        showErrorToast('Heslo musí mať aspoň 8 znakov a obsahovať veľké aj malé písmeno, číslicu a symbol.');
+        return;
+    }
+
     if (form.value.password !== form.value.password_confirmation) {
         showErrorToast('Heslá sa nezhodujú.');
         return;

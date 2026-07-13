@@ -239,51 +239,60 @@ router.beforeEach(async (to, from, next) => {
         window.$vueApp.config.globalProperties.$loader.show();
     }
 
-    // Optional: Scroll to top on navigation
-    window.scrollTo(0, 0);
+    // Every show() above must be matched by afterEach's hide() below, or the
+    // curtain is stuck until a hard refresh - vue-router only calls afterEach
+    // for navigations that resolve normally (including cancelled/duplicate
+    // ones via next(false)/next(error)), not for a guard that throws. Keeping
+    // this whole body inside try/catch guarantees next() always runs.
+    try {
+        // Optional: Scroll to top on navigation
+        window.scrollTo(0, 0);
 
-    const authStore = useAuthStore();
+        const authStore = useAuthStore();
 
-    // Fetch user if token exists
-    if (localStorage.getItem('auth_token') && !authStore.user) {
-        await authStore.fetchUser();
-    }
-
-    // Check if route requires authentication
-    if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-        return next({name: 'login'});
-    }
-
-    if (to.meta.requiresVerify && authStore.isAuthenticated && !authStore.user.email_verified_at) {
-        return next({ name: 'verification.notice' });
-    }
-
-    // Check permissions
-    if (to.meta.permissions) {
-        const hasPermission = to.meta.permissions.every(perm =>
-            authStore.hasPermission(perm)
-        );
-
-        if (!hasPermission) {
-            // A logged-in user without admin access lands on their own
-            // profile instead of a bare 404 when they try /admin/*.
-            if (to.path.startsWith('/admin')) {
-                return next({name: 'user-dashboard'});
-            }
-            return next({name: 'not-found'});
+        // Fetch user if token exists
+        if (localStorage.getItem('auth_token') && !authStore.user) {
+            await authStore.fetchUser();
         }
-    }
 
-    next();
+        // Check if route requires authentication
+        if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+            return next({name: 'login'});
+        }
+
+        if (to.meta.requiresVerify && authStore.isAuthenticated && !authStore.user.email_verified_at) {
+            return next({name: 'verification.notice'});
+        }
+
+        // Check permissions
+        if (to.meta.permissions) {
+            const hasPermission = to.meta.permissions.every(perm =>
+                authStore.hasPermission(perm)
+            );
+
+            if (!hasPermission) {
+                // An admin/editor missing just this one sub-permission stays
+                // on their own admin dashboard instead of being bounced out of
+                // the whole section; anyone without any admin access at all
+                // lands on their user dashboard.
+                if (to.path.startsWith('/admin')) {
+                    return next(authStore.hasPermission('view_admin') ? {name: 'admin-dashboard'} : {name: 'user-dashboard'});
+                }
+                return next({name: 'not-found'});
+            }
+        }
+
+        next();
+    } catch (error) {
+        console.error('Router guard error', error);
+        next(false);
+    }
 });
 
 router.afterEach(() => {
-    // Hide loading curtain with a slight delay
-    setTimeout(() => {
-        if (window.$vueApp && window.$vueApp.config.globalProperties.$loader) {
-            window.$vueApp.config.globalProperties.$loader.hide();
-        }
-    }, 200);
+    if (window.$vueApp && window.$vueApp.config.globalProperties.$loader) {
+        window.$vueApp.config.globalProperties.$loader.hide();
+    }
 });
 
 const app = createApp(App);

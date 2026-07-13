@@ -5,16 +5,17 @@ namespace App\Http\Controllers;
 use App\Models\Role;
 use App\Models\User;
 use App\Notifications\TwoFactorCodeNotification;
-use App\Services\CacheKeyService;
 use App\Services\SettingsService;
-use App\Traits\CacheTrait;
 use App\Traits\JsonResponseTrait;
 use Carbon\Carbon;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use PragmaRX\Google2FA\Exceptions\IncompatibleWithGoogleAuthenticatorException;
 use PragmaRX\Google2FA\Exceptions\InvalidCharactersException;
 use PragmaRX\Google2FA\Exceptions\SecretKeyTooShortException;
@@ -23,14 +24,18 @@ use Random\RandomException;
 
 class AuthController extends Controller
 {
-    use JsonResponseTrait, CacheTrait;
+    use JsonResponseTrait;
+
+    /**
+     * Minutes a two-factor challenge (issued after a correct password) stays
+     * redeemable for.
+     */
+    private const TWO_FACTOR_CHALLENGE_MINUTES = 10;
 
     public function register(Request $request): JsonResponse
     {
         if (SettingsService::instance()->isRegistrationEnabled() === false) {
-            return $this->errorResponse([
-                'message' => 'Registration is disabled.'
-            ]);
+            return $this->errorResponse(['message' => 'Registration is disabled.'], 403);
         }
 
         $request->validate([
@@ -76,43 +81,44 @@ class AuthController extends Controller
         $user = User::query()
             ->where('email', $request->email)
             ->first();
-        $cacheKey = CacheKeyService::instance()->getFailedAttemptsKey($request->email);
+
+        // A deleted account's password was randomized to something unguessable
+        // at deletion time (see UserController::deleteAccount), so Auth::attempt
+        // could never succeed against it anyway - short-circuit before paying
+        // the bcrypt cost, but keep the response identical to a normal wrong-
+        // password failure so this can't be used to detect a deleted account.
+        if ($user?->is_deleted) {
+            return $this->errorResponse(['message' => 'Incorrect login details.'], 401);
+        }
+
+        // Throttled per email+IP pair rather than a global/permanent block, so
+        // one person spamming wrong passwords against someone else's known
+        // email can no longer lock that account indefinitely - it only holds
+        // up their own IP for a few minutes.
+        $throttleKey = 'login:' . Str::lower($request->email) . '|' . $request->ip();
+
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            return $this->errorResponse([
+                'message' => 'Priveľa neúspešných pokusov o prihlásenie. Skúste to prosím znova o pár minút.'
+            ], 429);
+        }
 
         if (!Auth::attempt($request->only('email', 'password'))) {
-            $attempts = $this->cacheGet($cacheKey) ?? 0;
-
-            if ($attempts >= 5) {
-                if ($user) {
-                    $user->blockUser();
-                }
-                return $this->errorResponse([
-                    'message' => 'Too many failed login attempts.'
-                ]);
-            }
-
-            $this->cacheSet($cacheKey, $attempts + 1);
-            return $this->errorResponse([
-                'message' => 'Incorrect login details.'
-            ]);
+            RateLimiter::hit($throttleKey, 900); // 15 minute lockout window, self-clearing
+            return $this->errorResponse(['message' => 'Incorrect login details.'], 401);
         }
+
+        RateLimiter::clear($throttleKey);
 
         if ($user->isBlocked()) {
             return $this->errorResponse([
                 'message' => 'Account is blocked. Please contact support.'
-            ]);
-        }
-
-        if ($user->is_deleted) {
-            return $this->errorResponse([
-                'message' => 'Incorrect login details.'
-            ]);
+            ], 403);
         }
 
         if (!$user->hasVerifiedEmail()) {
             return $this->errorResponse(['message' => 'not-verified'], 403);
         }
-
-        $this->cacheForget($cacheKey);
 
         if ($user->two_factor_enabled) {
             // If 2FA is enabled, generate and send code if method is email
@@ -126,12 +132,18 @@ class AuthController extends Controller
 
             $method = $user->two_factor_method;
 
-            // Log out the user for now and return a challenge required response
+            // Log out the user for now and issue a one-time challenge token in
+            // place of the password check - loginWithTwoFactor() trusts this
+            // token (not a client-supplied user_id) as proof a correct
+            // password was already provided.
             Auth::logout();
+
+            $challengeToken = Str::random(64);
+            Cache::put('two_factor_challenge:' . $challengeToken, $user->id, now()->addMinutes(self::TWO_FACTOR_CHALLENGE_MINUTES));
 
             return $this->successResponse([
                 'two_factor_required' => true,
-                'user_id' => $user->id,
+                'challenge_token' => $challengeToken,
                 'method' => $method
             ]);
         }
@@ -157,11 +169,30 @@ class AuthController extends Controller
     public function loginWithTwoFactor(Request $request): JsonResponse
     {
         $request->validate([
-            'user_id' => 'required|exists:users,id',
+            'challenge_token' => 'required|string',
             'code' => 'required|string',
         ]);
 
-        $user = User::query()->find($request->user_id);
+        // Bounded per challenge token (itself only obtainable after a correct
+        // password) rather than per user_id, so this can no longer be brute
+        // forced by anyone who merely guesses/enumerates an account id.
+        $attemptsKey = 'two-factor-attempt:' . $request->challenge_token;
+
+        if (RateLimiter::tooManyAttempts($attemptsKey, 5)) {
+            return $this->errorResponse(['message' => 'Priveľa neúspešných pokusov. Prihláste sa prosím znova.'], 429);
+        }
+
+        $userId = Cache::get('two_factor_challenge:' . $request->challenge_token);
+
+        if (!$userId) {
+            return $this->errorResponse(['message' => 'Prihlasovací pokus vypršal. Prihláste sa prosím znova.'], 422);
+        }
+
+        $user = User::query()->find($userId);
+
+        if (!$user) {
+            return $this->errorResponse(['message' => 'Invalid or expired code.'], 422);
+        }
 
         $codeIsValid = false;
         if ($user->two_factor_method === 'app') {
@@ -171,15 +202,36 @@ class AuthController extends Controller
             $codeIsValid = $request->code == $user->two_factor_email_code && now()->lessThan($user->two_factor_email_expires_at);
         }
 
+        // A recovery code is a valid alternative to the normal TOTP/email code
+        // regardless of method, for a user who has lost access to their
+        // authenticator device.
+        $usedRecoveryCode = false;
+        if (!$codeIsValid && $user->two_factor_recovery_codes?->contains($request->code)) {
+            $codeIsValid = true;
+            $usedRecoveryCode = true;
+        }
+
         if (!$codeIsValid) {
+            RateLimiter::hit($attemptsKey, 300);
             return $this->errorResponse(['message' => 'Invalid or expired code.'], 422);
         }
 
-        // Clear email code after use
-        $user->forceFill([
+        RateLimiter::clear($attemptsKey);
+        Cache::forget('two_factor_challenge:' . $request->challenge_token);
+
+        $updates = [
             'two_factor_email_code' => null,
             'two_factor_email_expires_at' => null,
-        ])->save();
+        ];
+
+        if ($usedRecoveryCode) {
+            // Recovery codes are single-use - remove the redeemed one.
+            $updates['two_factor_recovery_codes'] = $user->two_factor_recovery_codes
+                ->reject(fn($recoveryCode) => $recoveryCode === $request->code)
+                ->values();
+        }
+
+        $user->forceFill($updates)->save();
 
         // Log the user in and create token
         Auth::login($user);
@@ -227,20 +279,21 @@ class AuthController extends Controller
         return $this->successResponse(['message' => 'Email successfully verified!']);
     }
 
+    /**
+     * Deliberately reveals nothing about whether the email exists or is
+     * already verified - same generic message either way (mirrors
+     * ForgotPasswordController::sendResetLinkEmail's anti-enumeration stance).
+     */
     public function resend(Request $request): JsonResponse
     {
+        $request->validate(['email' => 'required|email']);
+
         $user = User::query()->where('email', $request->email)->first();
 
-        if (!$user) {
-            return $this->errorResponse(['message' => 'Invalid request.'], 400);
+        if ($user && !$user->hasVerifiedEmail()) {
+            $user->sendEmailVerificationNotification();
         }
 
-        if ($user->hasVerifiedEmail()) {
-            return $this->errorResponse(['message' => 'Email is already verified.'], 400);
-        }
-
-        $user->sendEmailVerificationNotification();
-
-        return $this->successResponse(['message' => 'Link to verify email sent.']);
+        return $this->successResponse(['message' => 'Ak s touto e-mailovou adresou existuje neoverený účet, poslali sme naň overovací odkaz.']);
     }
 }

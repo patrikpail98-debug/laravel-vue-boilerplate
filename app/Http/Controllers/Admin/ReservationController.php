@@ -26,8 +26,16 @@ class ReservationController extends Controller
             ->with(['playground.area'])
             ->when($request->query('status'), fn($query, $status) => $query->where('status', $status))
             ->when($request->query('playground_id'), fn($query, $id) => $query->where('playground_id', $id))
+            ->when($request->query('search'), function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('customer_name', 'like', "%{$search}%")
+                        ->orWhere('customer_email', 'like', "%{$search}%")
+                        ->orWhere('variable_symbol', 'like', "%{$search}%");
+                });
+            })
             ->orderByDesc('created_at')
-            ->get();
+            ->paginate(20)
+            ->withQueryString();
 
         return $this->successResponse($reservations);
     }

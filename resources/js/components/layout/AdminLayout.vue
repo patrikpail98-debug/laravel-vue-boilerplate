@@ -8,8 +8,8 @@
             sidebarOpen ? 'translate-x-0': '-translate-x-full lg:translate-x-0'
         ]">
             <div class="p-4">
-                <h1 class="text-xl font-bold">{{ authStore.user.name }}</h1>
-                <p class="text-sm opacity-70">{{ authStore.user.email }}</p>
+                <h1 class="text-xl font-bold">{{ authStore.user?.name }}</h1>
+                <p class="text-sm opacity-70">{{ authStore.user?.email }}</p>
             </div>
             <ul class="menu p-4">
                 <li>
@@ -115,11 +115,10 @@ const authStore = useAuthStore();
 const router = useRouter();
 const sidebarOpen = ref(false);
 
-watch(() => router.currentRoute.value, () => {
+watch(() => router.currentRoute.value, (route) => {
     sidebarOpen.value = false;
-});
-
-document.title = `Administrácia`;
+    document.title = route.meta.title ? `${route.meta.title} — Administrácia` : 'Administrácia';
+}, {immediate: true});
 
 const userInitials = computed(() => {
     if (!authStore.user?.name) return '?';

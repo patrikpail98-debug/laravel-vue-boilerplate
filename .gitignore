@@ -27,4 +27,3 @@ composer.lock
 package-lock.json
 mysql/
 db/
-docker-compose.yml

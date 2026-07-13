@@ -41,17 +41,19 @@ const logout = async () => {
 };
 
 const resendVerification = async () => {
-    const emailFromParams = route.params.email;
-    //console.log(emailFromParams);
+    // Falls back to the logged-in (but unverified) user's own email, since
+    // the router guard sends people here with no :email param at all.
+    const email = route.params.email || authStore.user?.email;
 
-    if (!emailFromParams) {
+    if (!email) {
+        showErrorToast('Nepodarilo sa zistiť e-mailovú adresu. Prihláste sa prosím znova.');
         return;
     }
 
     sending.value = true;
     verificationSent.value = false;
     try {
-        await authStore.resendVerificationEmail(emailFromParams);
+        await authStore.resendVerificationEmail(email);
         verificationSent.value = true;
     } catch (error) {
         showErrorToast('Overovací e-mail sa nepodarilo odoslať.');

@@ -232,23 +232,13 @@ const register = async () => {
         });
         router.push({name: 'verification.notice'});
     } catch (error) {
-        // Handle API errors
-        if (error.response && error.response.data.errors) {
-            const apiErrors = error.response.data.errors;
-
-            if (apiErrors.email) {
-                errors.value.email = apiErrors.email[0];
-            }
-
-            if (apiErrors.name) {
-                errors.value.name = apiErrors.name[0];
-            }
-
-            if (apiErrors.password) {
-                errors.value.password = apiErrors.password[0];
-            }
+        // Handle API validation errors (422 with a field -> messages map)
+        if (error.errors) {
+            if (error.errors.email) errors.value.email = error.errors.email[0];
+            if (error.errors.name) errors.value.name = error.errors.name[0];
+            if (error.errors.password) errors.value.password = error.errors.password[0];
         } else {
-            showErrorToast('Registrácia zlyhala.');
+            showErrorToast(error.message ?? 'Registrácia zlyhala.');
         }
     } finally {
         loading.value = false;

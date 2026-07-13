@@ -9,7 +9,7 @@ export const useAuthStore = defineStore('auth', {
         isAuthenticated: false,
         roles: [],
         tfaRequired: false,
-        tfaUserId: null,
+        tfaChallengeToken: null,
         tfaMethod: null,
         permissions: [],
     }),
@@ -38,7 +38,7 @@ export const useAuthStore = defineStore('auth', {
 
             if (data.two_factor_required) {
                 this.tfaRequired = true;
-                this.tfaUserId = data.user_id;
+                this.tfaChallengeToken = data.challenge_token;
                 this.tfaMethod = data.method;
                 return {two_factor_required: true};
             } else {
@@ -51,13 +51,16 @@ export const useAuthStore = defineStore('auth', {
             const response = await http.request('/api/auth/login/2fa', {
                 method: 'POST',
                 body: JSON.stringify({
-                    user_id: this.tfaUserId,
+                    challenge_token: this.tfaChallengeToken,
                     code: code,
                 }),
                 headers: {'Content-Type': 'application/json'}
             });
 
-            if (!response.ok) throw new Error('Overenie dvojfaktorového kódu zlyhalo');
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.message ?? 'Overenie dvojfaktorového kódu zlyhalo');
+            }
 
             const data = await response.json();
             this.setAuth(data.user, data.access_token);
@@ -74,12 +77,15 @@ export const useAuthStore = defineStore('auth', {
                 }
             });
 
-            //console.log(response);
-            if (!response.ok) throw new Error('Registrácia zlyhala');
+            const data = await response.json();
 
-            const {user, access_token} = await response.json();
-            this.setAuth(user, access_token);
-            //this.router.push({name: 'verification.notice'});
+            if (!response.ok) {
+                const error = new Error(data.message ?? 'Registrácia zlyhala');
+                error.errors = data.errors ?? null;
+                throw error;
+            }
+
+            this.setAuth(data.user, data.access_token);
         },
 
         async logout() {
@@ -155,7 +161,7 @@ export const useAuthStore = defineStore('auth', {
 
         clearTfa() {
             this.tfaRequired = false;
-            this.tfaUserId = null;
+            this.tfaChallengeToken = null;
             this.tfaMethod = null;
         },
 

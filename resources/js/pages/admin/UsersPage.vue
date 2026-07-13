@@ -53,7 +53,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                <tr v-for="user in filteredUsers" :key="user.id">
+                <tr v-for="user in users" :key="user.id">
                     <td>
                         <div class="flex items-center space-x-3">
                             <div class="avatar placeholder">
@@ -136,10 +136,10 @@
                 >
                     «
                 </button>
-                <button class="join-item btn">Stránka {{ currentPage }}</button>
+                <button class="join-item btn">Stránka {{ currentPage }} / {{ lastPage }}</button>
                 <button
                     class="join-item btn"
-                    :class="{ 'btn-disabled': users.length < perPage }"
+                    :class="{ 'btn-disabled': currentPage >= lastPage }"
                     @click="currentPage++"
                 >
                     »
@@ -148,7 +148,7 @@
         </div>
 
         <!-- Empty State -->
-        <div v-if="filteredUsers.length === 0" class="text-center py-12">
+        <div v-if="!loading && users.length === 0" class="text-center py-12">
             <div class="flex justify-center mb-4">
                 <UserGroupIcon class="w-16 h-16 text-gray-300"/>
             </div>
@@ -239,12 +239,11 @@
                                     class="flex items-center"
                                 >
                                     <input
-                                        type="radio"
+                                        type="checkbox"
                                         :id="`role-${role.id}`"
                                         :value="role.id"
                                         v-model="userForm.roles"
-                                        class="radio radio-primary mr-2"
-                                        :checked="userForm.roles.includes(role.id)"
+                                        class="checkbox checkbox-primary mr-2"
                                     />
                                     <label :for="`role-${role.id}`" class="cursor-pointer">
                                         <span class="font-medium">{{ role.display_name }}</span>
@@ -395,7 +394,7 @@
 </template>
 
 <script setup>
-import {ref, computed, onMounted} from 'vue';
+import {ref, onMounted, watch} from 'vue';
 import {useAuthStore} from '@/stores/auth';
 import {
     PlusCircleIcon,
@@ -416,7 +415,8 @@ const authStore = useAuthStore();
 const users = ref([]);
 const roles = ref([]);
 const currentPage = ref(1);
-const perPage = 10;
+const lastPage = ref(1);
+const loading = ref(false);
 
 // Search and filters
 const searchQuery = ref('');
@@ -452,46 +452,45 @@ const passwordForm = ref({
     password_confirmation: ''
 });
 
-// Fetch users and roles
+// Fetch users and roles - filtering/pagination happens server-side.
 const fetchUsers = async () => {
+    loading.value = true;
     try {
-        const response = await http.request('/api/admin/user-management');
+        const params = new URLSearchParams({page: currentPage.value});
+        if (searchQuery.value) params.set('search', searchQuery.value);
+        if (roleFilter.value) params.set('role', roleFilter.value);
+
+        const response = await http.request(`/api/admin/user-management?${params.toString()}`);
 
         if (!response.ok) throw new Error('Načítanie používateľov zlyhalo');
 
         const data = await response.json();
-        users.value = data.users;
+        users.value = data.users.data;
+        lastPage.value = data.users.last_page;
         roles.value = data.roles;
     } catch (error) {
         showErrorToast('Chyba pri načítaní používateľov.');
         console.error('Error fetching users:', error);
+    } finally {
+        loading.value = false;
     }
 };
 
-// Filtered users based on search and filters
-const filteredUsers = computed(() => {
-    let result = users.value;
-
-    // Apply search filter
-    if (searchQuery.value) {
-        const query = searchQuery.value.toLowerCase();
-        result = result.filter(user =>
-            user.name.toLowerCase().includes(query) ||
-            user.email.toLowerCase().includes(query)
-        );
-    }
-
-    // Apply role filter
-    if (roleFilter.value) {
-        result = result.filter(user =>
-            user.roles.some(role => role.name === roleFilter.value)
-        );
-    }
-
-    // Apply pagination
-    const startIndex = (currentPage.value - 1) * perPage;
-    return result.slice(startIndex, startIndex + perPage);
+let searchDebounce = null;
+watch(searchQuery, () => {
+    clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(() => {
+        currentPage.value = 1;
+        fetchUsers();
+    }, 300);
 });
+
+watch(roleFilter, () => {
+    currentPage.value = 1;
+    fetchUsers();
+});
+
+watch(currentPage, fetchUsers);
 
 // Initialize user initials
 const userInitials = (name) => {
@@ -572,12 +571,9 @@ const submitUserForm = async () => {
 
         const method = isEditing.value ? 'PUT' : 'POST';
 
-        const response = await fetch(url, {
+        const response = await http.request(url, {
             method,
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${authStore.token}`
-            },
+            headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(userForm.value)
         });
 
@@ -597,12 +593,9 @@ const resetPassword = async () => {
     isSubmittingPassword.value = true;
 
     try {
-        const response = await fetch(`/api/admin/user-management/reset/${selectedUser.value.id}/password`, {
+        const response = await http.request(`/api/admin/user-management/reset/${selectedUser.value.id}/password`, {
             method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${authStore.token}`
-            },
+            headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(passwordForm.value)
         });
 
@@ -622,11 +615,8 @@ const deleteUser = async () => {
     isDeleting.value = true;
 
     try {
-        const response = await fetch(`/api/admin/user-management/delete/${selectedUser.value.id}`, {
+        const response = await http.request(`/api/admin/user-management/delete/${selectedUser.value.id}`, {
             method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${authStore.token}`
-            }
         });
 
         if (!response.ok) throw new Error('Vymazanie používateľa zlyhalo');
@@ -643,8 +633,11 @@ const deleteUser = async () => {
 
 // Reset filters
 const resetFilters = () => {
+    clearTimeout(searchDebounce);
     searchQuery.value = '';
     roleFilter.value = '';
+    currentPage.value = 1;
+    fetchUsers();
 };
 
 const formatDate = (dateString) => {

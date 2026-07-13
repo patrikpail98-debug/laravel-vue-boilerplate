@@ -38,9 +38,4 @@ class CacheKeyService
         return 'app_settings';
     }
 
-    public function getFailedAttemptsKey(string $email): string
-    {
-        return 'failed_attempts:'.$email;
-    }
-
 }

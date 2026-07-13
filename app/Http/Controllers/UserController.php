@@ -5,9 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Reservation;
 use App\Models\Role;
 use App\Models\User;
-use App\Services\CacheKeyService;
 use App\Services\ReservationPdfService;
-use App\Traits\CacheTrait;
 use App\Traits\JsonResponseTrait;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -20,7 +18,7 @@ use Illuminate\Validation\Rules\Password;
 
 class UserController extends Controller
 {
-    use JsonResponseTrait, CacheTrait;
+    use JsonResponseTrait;
 
     /**
      * @param Request $request
@@ -90,25 +88,37 @@ class UserController extends Controller
         ]);
     }
 
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $users = User::with('roles')->get()->map(function ($user) {
-            return [
+        $users = User::query()
+            // roles.permissions (not just roles) is what getAllPermissions()
+            // below actually walks - without it each user's roles lazy-load
+            // their permissions individually, one extra query per role.
+            ->with('roles.permissions')
+            ->when($request->query('search'), function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                });
+            })
+            ->when($request->query('role'), function ($query, $role) {
+                $query->whereHas('roles', fn($q) => $q->where('name', $role));
+            })
+            ->orderBy('name')
+            ->paginate(10)
+            ->withQueryString();
+
+        return response()->json([
+            'users' => $users->through(fn($user) => [
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
                 'roles' => $user->roles,
                 'is_blocked' => $user->is_blocked,
                 'updated_at' => $user->updated_at,
-                'permissions' => $user->getAllPermissions()
-            ];
-        });
-
-        $roles = Role::all();
-
-        return response()->json([
-            'users' => $users,
-            'roles' => $roles
+                'permissions' => $user->getAllPermissions(),
+            ]),
+            'roles' => Role::all(),
         ]);
     }
 
@@ -158,9 +168,10 @@ class UserController extends Controller
             'is_blocked' => $validated['is_blocked']
         ]);
 
-        if ($validated['is_blocked'] === false) {
-            $cacheKey = CacheKeyService::instance()->getFailedAttemptsKey($validated['email']);
-            $this->cacheForget($cacheKey);
+        if ($validated['is_blocked'] === true) {
+            // A blocked user's existing bearer token would otherwise keep
+            // working (up to its 7-day expiry) until they next try to log in.
+            $user->tokens()->delete();
         }
 
         $user->syncRoles($validated['roles']);

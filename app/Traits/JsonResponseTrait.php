@@ -31,7 +31,12 @@ trait JsonResponseTrait
         return response()->json($data, $statusCode);
     }
 
-    protected function errorResponse($message, int $statusCode = 401): JsonResponse
+    /**
+     * 400 (generic client error) by default - callers dealing with a specific
+     * error class (auth, validation, not-found, ...) should always pass an
+     * explicit status code rather than relying on this default.
+     */
+    protected function errorResponse($message, int $statusCode = 400): JsonResponse
     {
         return response()->json($message, $statusCode);
     }

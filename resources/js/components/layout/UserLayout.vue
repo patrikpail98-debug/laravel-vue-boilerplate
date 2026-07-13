@@ -94,11 +94,10 @@ const authStore = useAuthStore();
 const router = useRouter();
 const sidebarOpen = ref(false);
 
-watch(() => router.currentRoute.value, () => {
+watch(() => router.currentRoute.value, (route) => {
     sidebarOpen.value = false;
-});
-
-document.title = `Môj účet`;
+    document.title = route.meta.title ? `${route.meta.title} — Môj účet` : 'Môj účet';
+}, {immediate: true});
 
 const userInitials = computed(() => {
     if (!authStore.user?.name) return '?';

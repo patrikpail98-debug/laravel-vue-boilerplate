@@ -52,7 +52,14 @@ import {useRouter} from 'vue-router';
 const router = useRouter();
 
 const goBack = () => {
-    router.go(-1);
+    // history.state.back is null when this is the first entry in the SPA's
+    // own history (e.g. a direct/deep link) - going back then would leave
+    // the app entirely instead of landing somewhere useful.
+    if (window.history.state?.back) {
+        router.go(-1);
+    } else {
+        router.push('/');
+    }
 };
 </script>
 

@@ -2,10 +2,14 @@
     <div class="p-6 bg-base-100 rounded-box shadow-md">
         <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
             <h1 class="text-2xl font-bold text-primary">Rezervácie</h1>
-            <select v-model="statusFilter" class="select select-bordered" @change="fetchReservations">
-                <option value="">Všetky stavy</option>
-                <option v-for="status in statuses" :key="status.value" :value="status.value">{{ status.label }}</option>
-            </select>
+            <div class="flex flex-wrap gap-2">
+                <input type="text" class="input input-bordered" v-model="searchQuery"
+                       placeholder="Hľadať meno, e-mail, VS..."/>
+                <select v-model="statusFilter" class="select select-bordered">
+                    <option value="">Všetky stavy</option>
+                    <option v-for="status in statuses" :key="status.value" :value="status.value">{{ status.label }}</option>
+                </select>
+            </div>
         </div>
 
         <div class="flex flex-wrap items-end gap-3 mb-6 p-4 bg-base-200 rounded-box">
@@ -85,6 +89,14 @@
             </table>
         </div>
 
+        <div class="flex justify-center mt-6">
+            <div class="join">
+                <button class="join-item btn" :class="{ 'btn-disabled': currentPage === 1 }" @click="currentPage--">«</button>
+                <button class="join-item btn">Stránka {{ currentPage }} / {{ lastPage }}</button>
+                <button class="join-item btn" :class="{ 'btn-disabled': currentPage >= lastPage }" @click="currentPage++">»</button>
+            </div>
+        </div>
+
         <!-- Reject/Cancel note modal -->
         <dialog :class="{'modal-open': showNoteModal}" class="modal">
             <div class="modal-box">
@@ -109,7 +121,7 @@
 </template>
 
 <script setup>
-import {onMounted, ref} from 'vue';
+import {onMounted, ref, watch} from 'vue';
 import {CheckIcon, DocumentArrowDownIcon, EllipsisHorizontalIcon, EnvelopeIcon, TrashIcon, XMarkIcon} from '@heroicons/vue/24/outline';
 import 'notyf/notyf.min.css';
 import {showErrorToast, showSuccessToast} from '../../constants/toast.js';
@@ -118,6 +130,9 @@ import {formatReservationRange} from '../../utils/datetime.js';
 
 const reservations = ref([]);
 const statusFilter = ref('');
+const searchQuery = ref('');
+const currentPage = ref(1);
+const lastPage = ref(1);
 const reportFrom = ref('');
 const reportTo = ref('');
 const exporting = ref(false);
@@ -151,15 +166,35 @@ const formatRange = formatReservationRange;
 
 const fetchReservations = async () => {
     try {
-        const query = statusFilter.value ? `?status=${statusFilter.value}` : '';
-        const response = await http.request(`/api/admin/reservations${query}`);
+        const params = new URLSearchParams({page: currentPage.value});
+        if (statusFilter.value) params.set('status', statusFilter.value);
+        if (searchQuery.value) params.set('search', searchQuery.value);
+
+        const response = await http.request(`/api/admin/reservations?${params.toString()}`);
         const data = await response.json();
         if (!response.ok) throw new Error(data.message ?? 'Nepodarilo sa načítať rezervácie.');
-        reservations.value = data;
+        reservations.value = data.data;
+        lastPage.value = data.last_page;
     } catch (error) {
         showErrorToast(error.message ?? 'Nepodarilo sa načítať rezervácie.');
     }
 };
+
+let searchDebounce = null;
+watch(searchQuery, () => {
+    clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(() => {
+        currentPage.value = 1;
+        fetchReservations();
+    }, 300);
+});
+
+watch(statusFilter, () => {
+    currentPage.value = 1;
+    fetchReservations();
+});
+
+watch(currentPage, fetchReservations);
 
 const approve = async (reservation) => {
     try {

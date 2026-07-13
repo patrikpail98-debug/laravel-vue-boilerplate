@@ -2,12 +2,15 @@
     <div class="p-6 bg-base-100 rounded-box shadow-md space-y-10">
         <!-- Areas -->
         <div>
-            <div class="flex justify-between items-center mb-4">
+            <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
                 <h1 class="text-2xl font-bold text-primary">Areály</h1>
-                <button class="btn btn-primary" @click="openCreateAreaModal">
-                    <PlusCircleIcon class="w-5 h-5 mr-2"/>
-                    Nový areál
-                </button>
+                <div class="flex gap-2">
+                    <input type="text" class="input input-bordered input-sm" v-model="areaSearch" placeholder="Hľadať areál..."/>
+                    <button class="btn btn-primary" @click="openCreateAreaModal">
+                        <PlusCircleIcon class="w-5 h-5 mr-2"/>
+                        Nový areál
+                    </button>
+                </div>
             </div>
 
             <div class="overflow-x-auto">
@@ -21,7 +24,7 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr v-for="area in areas" :key="area.id">
+                    <tr v-for="area in filteredAreas" :key="area.id">
                         <td class="font-bold">{{ area.name }}</td>
                         <td>{{ area.address }}</td>
                         <td>{{ area.playgrounds?.length ?? 0 }}</td>
@@ -34,7 +37,7 @@
                             </button>
                         </td>
                     </tr>
-                    <tr v-if="!areas.length">
+                    <tr v-if="!filteredAreas.length">
                         <td colspan="4" class="text-center text-base-content/50 py-8">Žiadne areály.</td>
                     </tr>
                     </tbody>
@@ -44,12 +47,15 @@
 
         <!-- Playgrounds -->
         <div>
-            <div class="flex justify-between items-center mb-4">
+            <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
                 <h1 class="text-2xl font-bold text-primary">Ihriská</h1>
-                <button class="btn btn-primary" :disabled="!areas.length" @click="openCreatePlaygroundModal">
-                    <PlusCircleIcon class="w-5 h-5 mr-2"/>
-                    Nové ihrisko
-                </button>
+                <div class="flex gap-2">
+                    <input type="text" class="input input-bordered input-sm" v-model="playgroundSearch" placeholder="Hľadať ihrisko..."/>
+                    <button class="btn btn-primary" :disabled="!areas.length" @click="openCreatePlaygroundModal">
+                        <PlusCircleIcon class="w-5 h-5 mr-2"/>
+                        Nové ihrisko
+                    </button>
+                </div>
             </div>
 
             <div class="overflow-x-auto">
@@ -68,7 +74,7 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr v-for="playground in playgrounds" :key="playground.id">
+                    <tr v-for="playground in filteredPlaygrounds" :key="playground.id">
                         <td>
                             <div class="w-12 h-12 rounded bg-base-200 overflow-hidden flex items-center justify-center">
                                 <img v-if="playground.image_url" :src="playground.image_url" :alt="playground.name" class="w-full h-full object-cover"/>
@@ -99,7 +105,7 @@
                             </button>
                         </td>
                     </tr>
-                    <tr v-if="!playgrounds.length">
+                    <tr v-if="!filteredPlaygrounds.length">
                         <td colspan="9" class="text-center text-base-content/50 py-8">Žiadne ihriská.</td>
                     </tr>
                     </tbody>
@@ -265,7 +271,7 @@
 </template>
 
 <script setup>
-import {onMounted, ref} from 'vue';
+import {computed, onMounted, ref} from 'vue';
 import {PencilIcon, PlusCircleIcon, TrashIcon} from '@heroicons/vue/24/outline';
 import 'notyf/notyf.min.css';
 import {showErrorToast, showSuccessToast} from '../../constants/toast.js';
@@ -273,6 +279,22 @@ import http from '../../http.js';
 
 const areas = ref([]);
 const playgrounds = ref([]);
+const areaSearch = ref('');
+const playgroundSearch = ref('');
+
+const filteredAreas = computed(() => {
+    const query = areaSearch.value.trim().toLowerCase();
+    if (!query) return areas.value;
+    return areas.value.filter(area => area.name.toLowerCase().includes(query));
+});
+
+const filteredPlaygrounds = computed(() => {
+    const query = playgroundSearch.value.trim().toLowerCase();
+    if (!query) return playgrounds.value;
+    return playgrounds.value.filter(playground =>
+        playground.name.toLowerCase().includes(query) || playground.area?.name?.toLowerCase().includes(query)
+    );
+});
 
 const weekDays = [
     {key: 'mon', label: 'Pondelok'},

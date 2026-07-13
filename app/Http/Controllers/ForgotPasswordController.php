@@ -69,6 +69,11 @@ class ForgotPasswordController extends Controller
 
                 $user->save();
 
+                // A password reset likely means the old one was compromised or
+                // forgotten - any bearer token issued under it should stop
+                // working immediately rather than riding out its 7-day expiry.
+                $user->tokens()->delete();
+
                 event(new PasswordReset($user));
             }
         );

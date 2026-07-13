@@ -153,7 +153,7 @@ class NexiPaymentService
 
         $outcome = $this->interpretOutcome($data ?? [], $transaction->amount_cents);
 
-        return DB::transaction(function () use ($transaction, $data, $outcome, $orderId) {
+        $reservation = DB::transaction(function () use ($transaction, $data, $outcome, $orderId) {
             $transaction->update([
                 'raw_response' => $data,
                 'last_operation_type' => $data['orderStatus']['lastOperationType'] ?? null,
@@ -176,14 +176,6 @@ class NexiPaymentService
 
             if ($outcome === 'authorized') {
                 $reservation->update(['status' => Reservation::STATUS_APPROVED, 'verified_at' => Carbon::now()]);
-                $reservation->loadMissing('playground.area');
-
-                Mail::to($reservation->customer_email)->send(new ReservationCardPaidMail($reservation));
-
-                $sportEmail = Setting::query()->where('key', Setting::SPORT_NOTIFICATION_EMAIL_KEY)->value('value');
-                if ($sportEmail) {
-                    Mail::to($sportEmail)->send(new ReservationSportNotificationMail($reservation));
-                }
             } elseif ($outcome === 'declined') {
                 $reservation->update(['status' => Reservation::STATUS_CANCELLED]);
             }
@@ -195,6 +187,25 @@ class NexiPaymentService
 
             return $reservation;
         });
+
+        // Sent after the transaction has committed, outside the reservation's
+        // row lock - queueing a mail (a DB write, since QUEUE_CONNECTION is
+        // "database") no longer holds up the lock that both the webhook and
+        // the user-polled paymentStatus endpoint contend for. wasChanged()
+        // guards against re-sending on the idempotent "already processed by a
+        // concurrent check" path above, where no update() ever ran.
+        if ($outcome === 'authorized' && $reservation->status === Reservation::STATUS_APPROVED && $reservation->wasChanged('status')) {
+            $reservation->loadMissing('playground.area');
+
+            Mail::to($reservation->customer_email)->send(new ReservationCardPaidMail($reservation));
+
+            $sportEmail = Setting::query()->where('key', Setting::SPORT_NOTIFICATION_EMAIL_KEY)->value('value');
+            if ($sportEmail) {
+                Mail::to($sportEmail)->send(new ReservationSportNotificationMail($reservation));
+            }
+        }
+
+        return $reservation;
     }
 
     /**

@@ -38,12 +38,17 @@ services:
         depends_on:
             kvsportmysql:
                 condition: service_started
+        # All secrets/credentials below come from a local, untracked .env file
+        # at the repo root (docker compose loads it automatically) - never
+        # hardcode real values directly in this file, it's committed to git.
+        # See .env.example for the full list of variables and README.md for
+        # setup instructions.
         environment:
-            - DB_DATABASE=kvsport
+            - DB_DATABASE=${DB_DATABASE:-kvsport}
             - DB_HOST=kvsportmysql
-            - DB_PORT=7655
-            - DB_USERNAME=root
-            - DB_PASSWORD=myPassword123
+            - DB_PORT=${DB_PORT:-7655}
+            - DB_USERNAME=${DB_USERNAME:-root}
+            - DB_PASSWORD=${DB_PASSWORD:?DB_PASSWORD must be set in .env}
             - CACHE_STORE=redis
             - CACHE_DRIVER=redis
             - CACHE_PREFIX=kvsport_cache_
@@ -53,20 +58,20 @@ services:
             - REDIS_HOST=kvsportredis
             - REDIS_PORT=7656
             - REDIS_USERNAME=default
-            - REDIS_PASSWORD=redisPass123
-            - MAIL_MAILER=smtp
+            - REDIS_PASSWORD=${REDIS_PASSWORD:?REDIS_PASSWORD must be set in .env}
+            - MAIL_MAILER=${MAIL_MAILER:-smtp}
             - MAIL_SCHEME=null
-            - MAIL_BCC=
-            - MAIL_HOST=
-            - MAIL_PORT=587
-            - MAIL_USERNAME=username@host.com
-            - MAIL_PASSWORD=password
-            - MAIL_ENCRYPTION=tls
-            - MAIL_FROM_ADDRESS=
-            - ADMIN_EMAIL=
-            - MAIL_FROM_NAME="Mail from API"
-            - APP_NAME="Laravel Backend API"
-            - APP_KEY=base64:6HLMt8Ik9tTwNfudCfN+Z74VFcpjaWTDUc+N3Y1LUW0= # generate a new key with `php artisan key:generate`
+            - MAIL_BCC=${MAIL_BCC:-}
+            - MAIL_HOST=${MAIL_HOST:-}
+            - MAIL_PORT=${MAIL_PORT:-587}
+            - MAIL_USERNAME=${MAIL_USERNAME:-}
+            - MAIL_PASSWORD=${MAIL_PASSWORD:-}
+            - MAIL_ENCRYPTION=${MAIL_ENCRYPTION:-starttls}
+            - MAIL_FROM_ADDRESS=${MAIL_FROM_ADDRESS:-}
+            - ADMIN_EMAIL=${ADMIN_EMAIL:-}
+            - MAIL_FROM_NAME=${MAIL_FROM_NAME:-Karloveske centrum kultury}
+            - APP_NAME=${APP_NAME:-Laravel Backend API}
+            - APP_KEY=${APP_KEY:?APP_KEY must be set in .env - generate one with php artisan key:generate}
             - OCTANE_SERVER=swoole
             - OCTANE_HTTPS=false # change in production to true
         volumes:
