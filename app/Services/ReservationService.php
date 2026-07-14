@@ -118,6 +118,16 @@ class ReservationService
             throw new InvalidArgumentException('Vybraný termín je mimo otváracích hodín tohto ihriska.');
         }
 
+        return $this->priceFor($playground, $durationMinutes);
+    }
+
+    /**
+     * Price for a booking of the given duration, independent of the other
+     * eligibility checks in validateAndPrice() - used where those checks
+     * don't apply (e.g. an admin manually recording an off-system booking).
+     */
+    public function priceFor(Playground $playground, int $durationMinutes): float
+    {
         $slots = $durationMinutes / self::SLOT_MINUTES;
 
         return round($slots * (float)$playground->price_per_30min, 2);

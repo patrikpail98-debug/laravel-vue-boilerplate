@@ -6,14 +6,18 @@ use App\Http\Controllers\Controller;
 use App\Mail\ReservationApprovedMail;
 use App\Mail\ReservationPaymentMail;
 use App\Mail\ReservationRejectedMail;
+use App\Models\Playground;
 use App\Models\Reservation;
 use App\Services\ReservationPdfService;
+use App\Services\ReservationService;
 use App\Traits\JsonResponseTrait;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReservationController extends Controller
@@ -38,6 +42,87 @@ class ReservationController extends Controller
             ->withQueryString();
 
         return $this->successResponse($reservations);
+    }
+
+    /**
+     * Manually records a reservation an admin already agreed outside the
+     * system (e.g. a signed contract) so its slot is blocked here too.
+     * Deliberately skips every public-booking eligibility rule (duration
+     * cap, booking horizon, opening hours, no-past-dates) - none of those
+     * are data-integrity concerns, just self-service UX guardrails that
+     * don't apply to a trusted admin recording a real external agreement.
+     * The one check that's never skipped is slot overlap, since that would
+     * corrupt availability for everyone else.
+     */
+    public function storeManual(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'playground_id' => 'required|exists:playgrounds,id',
+            'customer_name' => 'required|string|max:255',
+            'customer_email' => 'required|email|max:255',
+            'customer_phone' => 'required|string|max:30',
+            'street' => 'required|string|max:255',
+            'city' => 'required|string|max:120',
+            'postcode' => 'required|string|max:20',
+            'ico' => 'nullable|string|max:20',
+            'start_time' => 'required|date',
+            'end_time' => 'required|date',
+            'admin_note' => 'nullable|string|max:1000',
+        ]);
+
+        $service = ReservationService::instance();
+
+        try {
+            $reservation = DB::transaction(function () use ($validated, $service) {
+                $playground = Playground::query()->lockForUpdate()->findOrFail($validated['playground_id']);
+
+                $tz = config('app.facility_timezone');
+                $start = Carbon::parse($validated['start_time'], $tz)->setTimezone('UTC');
+                $end = Carbon::parse($validated['end_time'], $tz)->setTimezone('UTC');
+
+                if ($start->gte($end)) {
+                    throw new InvalidArgumentException('Čas ukončenia musí byť po čase začiatku.');
+                }
+
+                if ($start->minute % ReservationService::SLOT_MINUTES !== 0 || $start->second !== 0) {
+                    throw new InvalidArgumentException('Termín musí začínať na celej alebo polhodine.');
+                }
+
+                $durationMinutes = $start->diffInMinutes($end);
+
+                if ($durationMinutes % ReservationService::SLOT_MINUTES !== 0) {
+                    throw new InvalidArgumentException('Dĺžka termínu musí byť násobkom 30 minút.');
+                }
+
+                if ($service->hasOverlap($playground, $start, $end)) {
+                    throw new InvalidArgumentException('Vybraný termín je už obsadený, zvoľte iný.');
+                }
+
+                $address = trim($validated['street'] . ', ' . $validated['postcode'] . ' ' . $validated['city']);
+
+                return Reservation::query()->create([
+                    'playground_id' => $playground->id,
+                    'user_id' => null,
+                    'customer_name' => $validated['customer_name'],
+                    'customer_email' => $validated['customer_email'],
+                    'customer_phone' => $validated['customer_phone'],
+                    'ico' => $validated['ico'] ?? null,
+                    'address' => $address,
+                    'start_time' => $start,
+                    'end_time' => $end,
+                    'variable_symbol' => $service->generateVariableSymbol(),
+                    'total_price' => $service->priceFor($playground, $durationMinutes),
+                    'payment_method' => null,
+                    'status' => Reservation::STATUS_APPROVED,
+                    'verified_at' => Carbon::now(),
+                    'admin_note' => $validated['admin_note'] ?? null,
+                ]);
+            });
+        } catch (InvalidArgumentException $e) {
+            return $this->errorResponse(['message' => $e->getMessage()], 422);
+        }
+
+        return $this->successResponse($reservation->load('playground.area'), 201);
     }
 
     public function approve(Reservation $reservation): JsonResponse

@@ -9,6 +9,10 @@
                     <option value="">Všetky stavy</option>
                     <option v-for="status in statuses" :key="status.value" :value="status.value">{{ status.label }}</option>
                 </select>
+                <button type="button" class="btn btn-secondary" @click="openCreateModal">
+                    <PlusCircleIcon class="w-5 h-5"/>
+                    Vytvoriť rezerváciu
+                </button>
             </div>
         </div>
 
@@ -117,12 +121,124 @@
                 </div>
             </div>
         </dialog>
+
+        <!-- Manual (off-system contract) reservation modal -->
+        <dialog :class="{'modal-open': showCreateModal}" class="modal">
+            <div class="modal-box max-w-2xl">
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" @click="showCreateModal = false">✕</button>
+                <h3 class="font-bold text-lg mb-1">Vytvoriť rezerváciu</h3>
+                <p class="text-sm text-base-content/70 mb-4">
+                    Pre termíny dohodnuté mimo systému (napr. podpísanou zmluvou) - termín sa hneď nastaví ako
+                    schválený a zablokuje sa v kalendári. Bežné limity pre verejné rezervácie (max. dĺžka, horizont,
+                    otváracie hodiny) sa tu neuplatňujú, kontroluje sa len že sa termín neprekrýva s inou rezerváciou.
+                </p>
+
+                <form @submit.prevent="submitManualReservation" class="space-y-4">
+                    <p class="text-xs text-base-content/60">
+                        Polia označené <span class="text-error" aria-hidden="true">*</span> sú povinné.
+                    </p>
+
+                    <fieldset class="fieldset">
+                        <legend class="fieldset-legend">
+                            Ihrisko <span class="text-error" aria-hidden="true">*</span><span class="sr-only"> (povinné)</span>
+                        </legend>
+                        <select class="select select-bordered w-full" v-model="manualForm.playground_id" required>
+                            <option :value="null" disabled>Vyberte ihrisko</option>
+                            <option v-for="playground in playgrounds" :key="playground.id" :value="playground.id">
+                                {{ playground.name }} ({{ playground.area?.name }})
+                            </option>
+                        </select>
+                    </fieldset>
+
+                    <div class="grid grid-cols-3 gap-4">
+                        <fieldset class="fieldset">
+                            <legend class="fieldset-legend">
+                                Dátum <span class="text-error" aria-hidden="true">*</span><span class="sr-only"> (povinné)</span>
+                            </legend>
+                            <input type="date" class="input input-bordered w-full" v-model="manualForm.date" required/>
+                        </fieldset>
+                        <fieldset class="fieldset">
+                            <legend class="fieldset-legend">
+                                Začiatok <span class="text-error" aria-hidden="true">*</span><span class="sr-only"> (povinné)</span>
+                            </legend>
+                            <input type="time" step="1800" class="input input-bordered w-full" v-model="manualForm.startTime" required/>
+                        </fieldset>
+                        <fieldset class="fieldset">
+                            <legend class="fieldset-legend">
+                                Trvanie (min) <span class="text-error" aria-hidden="true">*</span><span class="sr-only"> (povinné)</span>
+                            </legend>
+                            <input type="number" min="30" step="30" class="input input-bordered w-full" v-model.number="manualForm.durationMinutes" required/>
+                        </fieldset>
+                    </div>
+
+                    <fieldset class="fieldset">
+                        <legend class="fieldset-legend">
+                            Meno a priezvisko / názov firmy <span class="text-error" aria-hidden="true">*</span><span class="sr-only"> (povinné)</span>
+                        </legend>
+                        <input type="text" class="input input-bordered w-full" v-model="manualForm.customer_name" required/>
+                    </fieldset>
+                    <div class="grid grid-cols-2 gap-4">
+                        <fieldset class="fieldset">
+                            <legend class="fieldset-legend">
+                                E-mail <span class="text-error" aria-hidden="true">*</span><span class="sr-only"> (povinné)</span>
+                            </legend>
+                            <input type="email" class="input input-bordered w-full" v-model="manualForm.customer_email" required/>
+                        </fieldset>
+                        <fieldset class="fieldset">
+                            <legend class="fieldset-legend">
+                                Telefón <span class="text-error" aria-hidden="true">*</span><span class="sr-only"> (povinné)</span>
+                            </legend>
+                            <input type="tel" class="input input-bordered w-full" v-model="manualForm.customer_phone" required/>
+                        </fieldset>
+                    </div>
+
+                    <fieldset class="fieldset">
+                        <legend class="fieldset-legend">
+                            Ulica <span class="text-error" aria-hidden="true">*</span><span class="sr-only"> (povinné)</span>
+                        </legend>
+                        <input type="text" class="input input-bordered w-full" v-model="manualForm.street" required/>
+                    </fieldset>
+                    <div class="grid grid-cols-3 gap-4">
+                        <fieldset class="fieldset">
+                            <legend class="fieldset-legend">
+                                Mesto <span class="text-error" aria-hidden="true">*</span><span class="sr-only"> (povinné)</span>
+                            </legend>
+                            <input type="text" class="input input-bordered w-full" v-model="manualForm.city" required/>
+                        </fieldset>
+                        <fieldset class="fieldset">
+                            <legend class="fieldset-legend">
+                                PSČ <span class="text-error" aria-hidden="true">*</span><span class="sr-only"> (povinné)</span>
+                            </legend>
+                            <input type="text" class="input input-bordered w-full" v-model="manualForm.postcode" required/>
+                        </fieldset>
+                        <fieldset class="fieldset">
+                            <legend class="fieldset-legend">IČO</legend>
+                            <input type="text" class="input input-bordered w-full" v-model="manualForm.ico"/>
+                        </fieldset>
+                    </div>
+
+                    <fieldset class="fieldset">
+                        <legend class="fieldset-legend">Poznámka (interná)</legend>
+                        <textarea class="textarea textarea-bordered w-full" v-model="manualForm.admin_note"
+                                  placeholder="Napr. odkaz na zmluvu, číslo objednávky..."></textarea>
+                    </fieldset>
+
+                    <div class="modal-action">
+                        <button type="button" class="btn btn-ghost" @click="showCreateModal = false">Zrušiť</button>
+                        <button type="submit" class="btn btn-primary" :disabled="isCreating">
+                            <span v-if="isCreating" class="loading loading-spinner"></span>
+                            Vytvoriť a schváliť
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </dialog>
     </div>
 </template>
 
 <script setup>
 import {onMounted, ref, watch} from 'vue';
-import {CheckIcon, DocumentArrowDownIcon, EllipsisHorizontalIcon, EnvelopeIcon, TrashIcon, XMarkIcon} from '@heroicons/vue/24/outline';
+import {CheckIcon, DocumentArrowDownIcon, EllipsisHorizontalIcon, EnvelopeIcon, PlusCircleIcon, TrashIcon, XMarkIcon} from '@heroicons/vue/24/outline';
 import 'notyf/notyf.min.css';
 import {showErrorToast, showSuccessToast} from '../../constants/toast.js';
 import http from '../../http.js';
@@ -269,6 +385,82 @@ const exportCsv = async () => {
     }
 };
 
+const playgrounds = ref([]);
+
+const fetchPlaygrounds = async () => {
+    try {
+        const response = await http.request('/api/admin/facilities/playgrounds');
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message ?? 'Nepodarilo sa načítať ihriská.');
+        playgrounds.value = data;
+    } catch (error) {
+        showErrorToast(error.message ?? 'Nepodarilo sa načítať ihriská.');
+    }
+};
+
+const showCreateModal = ref(false);
+const isCreating = ref(false);
+const emptyManualForm = () => ({
+    playground_id: null,
+    date: '',
+    startTime: '',
+    durationMinutes: 60,
+    customer_name: '',
+    customer_email: '',
+    customer_phone: '',
+    street: '',
+    city: '',
+    postcode: '',
+    ico: '',
+    admin_note: '',
+});
+const manualForm = ref(emptyManualForm());
+
+const openCreateModal = () => {
+    manualForm.value = emptyManualForm();
+    showCreateModal.value = true;
+};
+
+const submitManualReservation = async () => {
+    isCreating.value = true;
+    try {
+        const start = new Date(`${manualForm.value.date}T${manualForm.value.startTime}:00`);
+        const end = new Date(start.getTime() + manualForm.value.durationMinutes * 60000);
+        const pad = (n) => String(n).padStart(2, '0');
+        const toLocal = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:00`;
+
+        const response = await http.request('/api/admin/reservations/manual', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                playground_id: manualForm.value.playground_id,
+                customer_name: manualForm.value.customer_name,
+                customer_email: manualForm.value.customer_email,
+                customer_phone: manualForm.value.customer_phone,
+                street: manualForm.value.street,
+                city: manualForm.value.city,
+                postcode: manualForm.value.postcode,
+                ico: manualForm.value.ico,
+                admin_note: manualForm.value.admin_note,
+                start_time: toLocal(start),
+                end_time: toLocal(end),
+            }),
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message ?? 'Vytvorenie rezervácie zlyhalo.');
+
+        showSuccessToast('Rezervácia bola vytvorená a schválená.');
+        showCreateModal.value = false;
+        currentPage.value = 1;
+        await fetchReservations();
+    } catch (error) {
+        showErrorToast(error.message ?? 'Vytvorenie rezervácie zlyhalo.');
+    } finally {
+        isCreating.value = false;
+    }
+};
+
 const showNoteModal = ref(false);
 const noteAction = ref('reject');
 const noteTarget = ref(null);
@@ -303,5 +495,8 @@ const submitNoteAction = async () => {
     }
 };
 
-onMounted(fetchReservations);
+onMounted(() => {
+    fetchReservations();
+    fetchPlaygrounds();
+});
 </script>
