@@ -64,21 +64,15 @@ class Reservation extends Model
      */
     public const PAYMENT_HOLD_MINUTES = 30;
 
+    /**
+     * Only the attributes that legitimately get set via ->update() after
+     * creation. Every other column (customer PII, price, user_id,
+     * verification_token, ...) is set once at creation through an explicit
+     * forceCreate() array, so keeping them out of $fillable means a future
+     * accidental update($request->all()) can't tamper with them.
+     */
     protected $fillable = [
-        'playground_id',
-        'user_id',
-        'customer_name',
-        'customer_email',
-        'customer_phone',
-        'ico',
-        'address',
-        'start_time',
-        'end_time',
-        'variable_symbol',
-        'total_price',
-        'payment_method',
         'status',
-        'verification_token',
         'verified_at',
         'admin_note',
     ];

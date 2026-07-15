@@ -100,7 +100,10 @@ class ReservationController extends Controller
 
                 $address = trim($validated['street'] . ', ' . $validated['postcode'] . ' ' . $validated['city']);
 
-                return Reservation::query()->create([
+                // forceCreate: this is a fully explicit, server-built array (no
+                // request->all()), and status/user_id/etc. are intentionally set
+                // here - see the trimmed $fillable on the Reservation model.
+                return Reservation::forceCreate([
                     'playground_id' => $playground->id,
                     'user_id' => null,
                     'customer_name' => $validated['customer_name'],
@@ -260,11 +263,11 @@ class ReservationController extends Controller
             foreach ($reservations as $reservation) {
                 fputcsv($handle, [
                     $reservation->startTimeLocal()->format('d.m.Y H:i') . '–' . $reservation->endTimeLocal()->format('H:i'),
-                    $reservation->customer_name,
-                    $reservation->customer_email,
-                    $reservation->playground?->name,
-                    $reservation->playground?->area?->name,
-                    $reservation->variable_symbol,
+                    $this->csvSafe($reservation->customer_name),
+                    $this->csvSafe($reservation->customer_email),
+                    $this->csvSafe($reservation->playground?->name),
+                    $this->csvSafe($reservation->playground?->area?->name),
+                    $this->csvSafe($reservation->variable_symbol),
                     number_format((float)$reservation->total_price, 2, ',', ''),
                     $paymentMethodLabels[$reservation->payment_method] ?? $reservation->payment_method,
                     $statusLabels[$reservation->status] ?? $reservation->status,
@@ -276,5 +279,23 @@ class ReservationController extends Controller
             'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ]);
+    }
+
+    /**
+     * Neutralises spreadsheet formula injection: a cell whose first character
+     * is one a spreadsheet treats as a formula (= + - @, or a leading tab/CR)
+     * gets an apostrophe prefix so Excel/Sheets renders it as literal text
+     * instead of executing it. Customer name/email are attacker-controlled
+     * (guest booking), so they must never be trusted in an exported CSV.
+     */
+    private function csvSafe(?string $value): string
+    {
+        $value = (string) $value;
+
+        if ($value !== '' && in_array($value[0], ['=', '+', '-', '@', "\t", "\r"], true)) {
+            return "'" . $value;
+        }
+
+        return $value;
     }
 }

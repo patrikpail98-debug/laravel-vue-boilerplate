@@ -65,7 +65,10 @@ class ReservationController extends Controller
 
                 $address = trim($validated['street'] . ', ' . $validated['postcode'] . ' ' . $validated['city']);
 
-                return Reservation::query()->create([
+                // forceCreate: fully explicit, server-built array (never
+                // request->all()); status/verification_token/user_id are set
+                // deliberately here - see the trimmed $fillable on Reservation.
+                return Reservation::forceCreate([
                     'playground_id' => $playground->id,
                     'user_id' => $this->resolveOptionalUser($request)?->id,
                     'customer_name' => $validated['customer_name'],

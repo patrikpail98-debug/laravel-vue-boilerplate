@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 use PragmaRX\Google2FA\Exceptions\IncompatibleWithGoogleAuthenticatorException;
 use PragmaRX\Google2FA\Exceptions\InvalidCharactersException;
 use PragmaRX\Google2FA\Exceptions\SecretKeyTooShortException;
@@ -41,7 +42,7 @@ class AuthController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|unique:users',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => ['required', 'string', 'confirmed', Password::defaults()],
         ]);
 
         $user = User::query()
@@ -263,6 +264,13 @@ class AuthController extends Controller
     public function verify(Request $request): JsonResponse
     {
         $user = User::query()->find($request->route('id'));
+
+        // The 'signed' middleware already proved the link is authentic and
+        // unexpired; guard against a user deleted between issuance and click
+        // (find() would return null and the sha1() below would fatal).
+        if (!$user) {
+            return $this->errorResponse(['message' => 'Invalid token'], 403);
+        }
 
         if (!hash_equals((string)$request->route('hash'), sha1($user->getEmailForVerification()))) {
             return $this->errorResponse(['message' => 'Invalid token'], 403);

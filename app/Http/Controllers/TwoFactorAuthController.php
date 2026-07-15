@@ -6,6 +6,7 @@ use App\Traits\JsonResponseTrait;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use PragmaRX\Google2FA\Exceptions\IncompatibleWithGoogleAuthenticatorException;
 use PragmaRX\Google2FA\Exceptions\InvalidCharactersException;
@@ -84,6 +85,22 @@ class TwoFactorAuthController extends Controller
     public function disable(Request $request): JsonResponse
     {
         $user = $request->user();
+
+        // Disabling 2FA is a security downgrade, so re-confirm the current
+        // password first - a stolen/leaked bearer token alone must not be
+        // enough to silently turn 2FA (and the recovery codes) off.
+        $request->validate([
+            'password' => [
+                'required',
+                'string',
+                function ($attribute, $value, $fail) use ($user) {
+                    if (!Hash::check($value, $user->password)) {
+                        $fail('Zadané heslo nie je správne.');
+                    }
+                },
+            ],
+        ]);
+
         $user->forceFill([
             'two_factor_enabled' => false,
             'two_factor_method' => null,

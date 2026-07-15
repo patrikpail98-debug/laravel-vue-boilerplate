@@ -43,6 +43,11 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * The attributes that are mass assignable.
      *
+     * The two_factor_* columns are deliberately NOT here: they're only ever
+     * written through forceFill() in the auth/2FA controllers, so leaving them
+     * out keeps the 2FA secret, enabled flag and recovery codes out of reach
+     * of any accidental mass assignment.
+     *
      * @var list<string>
      */
     protected $fillable = [
@@ -54,12 +59,6 @@ class User extends Authenticatable implements MustVerifyEmail
         'postcode',
         'ico',
         'password',
-        'two_factor_method',
-        'two_factor_enabled',
-        'two_factor_secret',
-        'two_factor_recovery_codes',
-        'two_factor_email_code',
-        'two_factor_email_expires_at',
     ];
 
     /**

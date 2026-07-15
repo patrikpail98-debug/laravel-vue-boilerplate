@@ -126,10 +126,15 @@ class SettingsController extends Controller
     public function flushCache(Request $request): JsonResponse
     {
         $pattern = $request->input('pattern');
+        $prefix = config('cache.prefix', 'laravelapibackend_cache_');
 
         try {
             if ($pattern) {
-                $this->searchAndDelete($pattern);
+                // Bind the user-supplied pattern to this app's cache prefix so it
+                // can only ever match keys in our own namespace. Without this a
+                // bare "*" would wipe the whole Redis instance - sessions, queues
+                // and any other app sharing it - not just our cache.
+                $this->searchAndDelete($prefix . $pattern);
                 $message = "Cache keys matching '{$pattern}' were flushed.";
             } else {
                 Artisan::call('cache:clear');

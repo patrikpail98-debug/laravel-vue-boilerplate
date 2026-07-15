@@ -127,7 +127,7 @@ class UserController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|unique:users',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => ['required', 'string', 'confirmed', Password::defaults()],
             'roles' => 'required|array',
             'roles.*' => 'exists:roles,id'
         ]);
@@ -194,7 +194,7 @@ class UserController extends Controller
     public function resetPassword(Request $request, User $user): JsonResponse
     {
         $validated = $request->validate([
-            'password' => 'required|string|min:8|confirmed'
+            'password' => ['required', 'string', 'confirmed', Password::defaults()]
         ]);
 
         $user->update([
@@ -228,7 +228,7 @@ class UserController extends Controller
                 'required',
                 'string',
                 'confirmed', // This requires a 'password_confirmation' field
-                Password::min(8)->mixedCase()->numbers()->symbols(), // Enforce strong password
+                Password::defaults(), // Shared strong-password policy (see AppServiceProvider)
             ],
         ]);
 

@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Auth\Events\PasswordReset;
+use Illuminate\Validation\Rules\Password as PasswordRule;
 
 class ForgotPasswordController extends Controller
 {
@@ -54,7 +55,7 @@ class ForgotPasswordController extends Controller
         $request->validate([
             'token' => 'required',
             'email' => 'required|email',
-            'password' => 'required|confirmed|min:8',
+            'password' => ['required', 'confirmed', PasswordRule::defaults()],
         ]);
 
         // Here we will attempt to reset the user's password. If it is successful we

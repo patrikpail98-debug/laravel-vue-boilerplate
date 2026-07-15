@@ -26,6 +26,9 @@
                         <label class="label" v-if="errors.password">
                             <span class="label-text-alt text-error">{{ errors.password[0] }}</span>
                         </label>
+                        <label class="label" v-else>
+                            <span class="label-text-alt text-base-content/60">Aspoň 8 znakov, veľké aj malé písmeno, číslica a symbol.</span>
+                        </label>
                     </div>
 
                     <div class="form-control mb-4">
@@ -70,9 +73,29 @@ onMounted(() => {
 });
 
 const handleResetPassword = async () => {
-    loading.value = true;
     errors.value = {};
     status.value = '';
+
+    // Mirror the server policy (Password::min(8)->mixedCase()->numbers()->symbols())
+    // so a weak password is caught before the round-trip.
+    const pw = form.value.password;
+    const pwValid = pw.length >= 8
+        && /[a-z]/.test(pw)
+        && /[A-Z]/.test(pw)
+        && /[0-9]/.test(pw)
+        && /[^a-zA-Z0-9]/.test(pw);
+
+    if (!pwValid) {
+        errors.value = { password: ['Heslo musí mať aspoň 8 znakov a obsahovať veľké aj malé písmeno, číslicu a symbol.'] };
+        return;
+    }
+
+    if (form.value.password !== form.value.password_confirmation) {
+        errors.value = { password: ['Heslá sa nezhodujú.'] };
+        return;
+    }
+
+    loading.value = true;
 
     try {
         const response = await http.request('/api/auth/reset-password', {

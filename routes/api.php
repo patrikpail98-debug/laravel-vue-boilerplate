@@ -18,10 +18,15 @@ use Illuminate\Support\Facades\Route;
 
 
 Route::prefix('auth')->middleware(['throttle:api'])->group(function () {
-    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/register', [AuthController::class, 'register'])
+        ->middleware(['throttle:10,60']); // 10 attempts per hour - slows email enumeration/abuse
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/login/2fa', [AuthController::class, 'loginWithTwoFactor']);
+    // 'signed' enforces the APP_KEY-based signature (and expiry) of the link
+    // generated in CustomVerifyEmail. Without it the only check was sha1(email),
+    // which anyone who knows the target's email address could forge.
     Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verify'])
+        ->middleware(['signed'])
         ->name('verification.verify');
     Route::post('/email/resend', [AuthController::class, 'resend'])
         ->middleware(['throttle:5,60']); // 5 attempts per hour

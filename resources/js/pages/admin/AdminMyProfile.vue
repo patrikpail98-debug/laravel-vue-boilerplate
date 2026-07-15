@@ -31,7 +31,7 @@
                         <strong v-if="tfaMethod === 'email'">cez e-mail</strong>.
                     </span>
                 </div>
-                <button @click="disableTFA" class="btn btn-error" :disabled="tfaLoading">
+                <button @click="openDisableTfaModal" class="btn btn-error" :disabled="tfaLoading">
                     <span v-if="tfaLoading" class="loading loading-spinner"></span>
                     Vypnúť 2FA
                 </button>
@@ -111,7 +111,8 @@
             <h3 class="font-bold text-lg">Nastavenie dvojfaktorového overenia</h3>
             <p class="py-4">Naskenujte QR kód pomocou aplikácie (napr. Google Authenticator).</p>
 
-            <div v-html="qrCode" class="bg-white p-4 inline-block rounded-lg shadow-inner"></div>
+            <img v-if="qrCodeDataUri" :src="qrCodeDataUri" alt="QR kód pre dvojfaktorové overenie"
+                 class="bg-white p-4 inline-block rounded-lg shadow-inner" />
 
             <p class="py-4">Následne zadajte kód z aplikácie.</p>
 
@@ -123,6 +124,34 @@
                 <button class="btn btn-ghost" @click="cancelTFA">Zrušiť</button>
                 <button class="btn btn-primary" @click="confirmTFA" :disabled="tfaLoading">Potvrdiť</button>
             </div>
+        </div>
+    </dialog>
+
+    <dialog :class="{'modal-open': showDisableTfaModal}" class="modal">
+        <div class="modal-box">
+            <h3 class="font-bold text-lg">Vypnúť dvojfaktorové overenie</h3>
+            <p class="py-4">Pre potvrdenie zadajte svoje aktuálne heslo.</p>
+
+            <form @submit.prevent="disableTFA">
+                <div class="form-control">
+                    <input
+                        type="password"
+                        v-model="disablePassword"
+                        placeholder="Aktuálne heslo"
+                        class="input input-bordered w-full"
+                        autocomplete="current-password"
+                        required
+                    />
+                </div>
+
+                <div class="modal-action">
+                    <button type="button" class="btn btn-ghost" @click="cancelDisableTfa">Zrušiť</button>
+                    <button type="submit" class="btn btn-error" :disabled="tfaLoading || !disablePassword">
+                        <span v-if="tfaLoading" class="loading loading-spinner"></span>
+                        Vypnúť 2FA
+                    </button>
+                </div>
+            </form>
         </div>
     </dialog>
 </template>
@@ -140,8 +169,17 @@ const tfaEnabled = computed(() => authStore.user?.two_factor_enabled);
 const tfaMethod = computed(() => authStore.user?.two_factor_method);
 const tfaLoading = ref(false);
 const showTfaModal = ref(false);
+const showDisableTfaModal = ref(false);
+const disablePassword = ref('');
 const qrCode = ref('');
 const tfaCode = ref('');
+
+// Render the (server-generated, trusted) QR SVG as an <img> data URI instead of
+// v-html: an <img>-loaded SVG cannot execute script, so this stays safe even if
+// the source were ever compromised.
+const qrCodeDataUri = computed(() =>
+    qrCode.value ? `data:image/svg+xml;utf8,${encodeURIComponent(qrCode.value)}` : ''
+);
 
 const enableTfaViaApp = async () => {
     tfaLoading.value = true;
@@ -190,27 +228,52 @@ const confirmTFA = async () => {
     }
 };
 
+const openDisableTfaModal = () => {
+    disablePassword.value = '';
+    showDisableTfaModal.value = true;
+};
+
+const cancelDisableTfa = () => {
+    showDisableTfaModal.value = false;
+    disablePassword.value = '';
+};
+
 const disableTFA = async () => {
-    if (!confirm('Naozaj chcete vypnúť 2FA?')) return;
+    // The server requires the current password to disable 2FA, so a stolen
+    // session token alone can't turn it off. The password is collected via the
+    // masked input in the disable modal (never a plaintext prompt()).
+    if (!disablePassword.value) return;
     tfaLoading.value = true;
     try {
-        await http.request('/api/user/two-factor-authentication/disable', { method: 'DELETE' });
+        const response = await http.request('/api/user/two-factor-authentication/disable', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: disablePassword.value }),
+        });
+        if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            throw new Error(data.message || 'Nepodarilo sa vypnúť 2FA.');
+        }
+        showDisableTfaModal.value = false;
+        disablePassword.value = '';
         await authStore.fetchUser();
         showSuccessToast('2FA bolo vypnuté!');
     } catch (error) {
-        showErrorToast('Nepodarilo sa vypnúť 2FA.');
+        // Keep the modal open on a wrong password so the user can retry.
+        showErrorToast(error.message || 'Nepodarilo sa vypnúť 2FA.');
     } finally {
         tfaLoading.value = false;
     }
 };
 
 const cancelTFA = () => {
+    // Just close the setup modal. Any secret generated by enable() but never
+    // confirmed stays unused (two_factor_enabled is still false) and is
+    // overwritten the next time setup starts - no privileged disable call, so
+    // cancelling never triggers the password prompt above.
     showTfaModal.value = false;
-    // Call disable to clean up the secret if setup is cancelled
-    if (tfaEnabled.value && tfaMethod.value === 'app') {
-        // Only disable if it's already in an intermediate state
-        disableTFA();
-    }
+    qrCode.value = '';
+    tfaCode.value = '';
 };
 
 // Reactive state for the form fields

@@ -64,6 +64,7 @@
                                 >
                             </div>
                             <p v-if="errors.password" class="mt-1 text-sm text-red-600">{{ errors.password }}</p>
+                            <p v-else class="mt-1 text-xs text-gray-500">Aspoň 8 znakov, veľké aj malé písmeno, číslica a symbol.</p>
                         </div>
 
                         <div>
@@ -188,18 +189,20 @@ const validateForm = () => {
         isValid = false;
     }
 
-    // Password validation
+    // Password validation - mirrors the server policy
+    // (Password::min(8)->mixedCase()->numbers()->symbols()) so a rejection
+    // shows up immediately instead of only after a round-trip.
     if (!form.value.password) {
         errors.value.password = 'Heslo je povinné';
         isValid = false;
-    } else if (form.value.password.length < 8) {
-        errors.value.password = 'Heslo musí mať aspoň 8 znakov';
-        isValid = false;
-    } else if (!/[A-Z]/.test(form.value.password)) {
-        errors.value.password = 'Heslo musí obsahovať aspoň jedno veľké písmeno';
-        isValid = false;
-    } else if (!/[0-9]/.test(form.value.password)) {
-        errors.value.password = 'Heslo musí obsahovať aspoň jednu číslicu';
+    } else if (
+        form.value.password.length < 8
+        || !/[a-z]/.test(form.value.password)
+        || !/[A-Z]/.test(form.value.password)
+        || !/[0-9]/.test(form.value.password)
+        || !/[^a-zA-Z0-9]/.test(form.value.password)
+    ) {
+        errors.value.password = 'Heslo musí mať aspoň 8 znakov a obsahovať veľké aj malé písmeno, číslicu a symbol.';
         isValid = false;
     }
 
