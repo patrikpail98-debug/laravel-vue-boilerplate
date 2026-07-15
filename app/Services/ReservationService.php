@@ -218,7 +218,7 @@ class ReservationService
         return $summaries;
     }
 
-    public function hasOverlap(Playground $playground, Carbon $start, Carbon $end, ?int $excludeReservationId = null): bool
+    public function hasOverlap(Playground $playground, Carbon $start, Carbon $end, ?string $excludeReservationId = null): bool
     {
         $reservations = $playground->reservations()
             ->whereIn('status', Reservation::ACTIVE_STATUSES)

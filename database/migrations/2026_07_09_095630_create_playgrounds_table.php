@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('playgrounds', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('area_id')->constrained('areas')->onDelete('cascade');
+            $table->uuid('id')->primary();
+            $table->foreignUuid('area_id')->constrained('areas')->onDelete('cascade');
             $table->string('name');
             $table->decimal('price_per_30min', 8, 2);
             $table->unsignedInteger('max_horizon_days')->default(14);

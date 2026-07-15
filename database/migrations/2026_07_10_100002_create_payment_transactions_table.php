@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('payment_transactions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('reservation_id')->constrained()->onDelete('cascade');
+            $table->foreignUuid('reservation_id')->constrained()->onDelete('cascade');
 
             $table->string('provider')->default('nexi_xpay');
             // Our own id sent to the gateway as orderId - unique so we can look

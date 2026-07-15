@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * what the gateway reported at each step.
  *
  * @property int $id
- * @property int $reservation_id
+ * @property string $reservation_id
  * @property string $provider
  * @property string $order_id
  * @property string $status

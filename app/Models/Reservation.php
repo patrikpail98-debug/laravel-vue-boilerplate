@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasVersion4Uuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,8 +12,8 @@ use Illuminate\Support\Carbon;
 /**
  * class Reservation
  * @package App\Models
- * @property int $id
- * @property int $playground_id
+ * @property string $id
+ * @property string $playground_id
  * @property int|null $user_id
  * @property string $customer_name
  * @property string $customer_email
@@ -30,7 +31,7 @@ use Illuminate\Support\Carbon;
  */
 class Reservation extends Model
 {
-    use HasFactory;
+    use HasFactory, HasVersion4Uuids;
 
     public const STATUS_UNVERIFIED = 'unverified';
     public const STATUS_AWAITING_PAYMENT = 'awaiting_payment';

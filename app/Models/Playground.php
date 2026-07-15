@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasVersion4Uuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,8 +13,8 @@ use Illuminate\Support\Facades\Storage;
 /**
  * class Playground
  * @package App\Models
- * @property int $id
- * @property int $area_id
+ * @property string $id
+ * @property string $area_id
  * @property string $name
  * @property string|null $description
  * @property float $price_per_30min
@@ -28,7 +29,7 @@ use Illuminate\Support\Facades\Storage;
  */
 class Playground extends Model
 {
-    use HasFactory;
+    use HasFactory, HasVersion4Uuids;
 
     /**
      * Ordered weekday keys used in the `opening_hours` JSON column, indexed

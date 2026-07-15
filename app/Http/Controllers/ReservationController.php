@@ -188,7 +188,7 @@ class ReservationController extends Controller
     /**
      * Confirms a guest's email via the link sent by ReservationVerificationMail.
      */
-    public function verify(int $id, string $token): JsonResponse
+    public function verify(string $id, string $token): JsonResponse
     {
         $reservation = Reservation::query()->find($id);
 
