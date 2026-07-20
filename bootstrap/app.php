@@ -26,5 +26,17 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Every api/* request is JSON-only (no HTML fallback exists for it), so
+        // always render exceptions as JSON there - regardless of the request's
+        // Accept header - letting the default status-code mapping apply (422 +
+        // field errors for ValidationException, 404 for a missing model/route,
+        // 401 for AuthenticationException, etc.) instead of a redirect to '/'.
         //
+        // This used to live in App\Exceptions\Handler's shouldReturnJson()
+        // override, but Laravel's withExceptions() always binds the framework's
+        // own base Handler (see ApplicationBuilder::withExceptions()) - that
+        // class was never actually instantiated, so the override never ran.
+        $exceptions->shouldRenderJsonWhen(fn ($request, $e) => $request->is('api/*') || $request->expectsJson());
+
+        $exceptions->dontFlash(['password', 'password_confirmation']);
     })->create();

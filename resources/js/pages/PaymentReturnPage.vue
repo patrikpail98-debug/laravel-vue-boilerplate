@@ -78,7 +78,7 @@ const checkStatus = async () => {
         }
 
         status.value = data.status;
-        playgroundId.value = data.reservation?.playground_id ?? null;
+        playgroundId.value = data.reservation?.playground?.slug ?? null;
 
         if (data.status === 'cancelled' || data.status === 'rejected') {
             errorMessage.value = 'Platba sa nepodarila alebo bola zrušená. Termín bol uvoľnený, skúste to prosím znova.';

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Cocur\Slugify\Slugify;
 use Illuminate\Database\Eloquent\Concerns\HasVersion4Uuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -16,6 +17,7 @@ use Illuminate\Support\Facades\Storage;
  * @property string $id
  * @property string $area_id
  * @property string $name
+ * @property string $slug
  * @property string|null $description
  * @property float $price_per_30min
  * @property int $max_horizon_days
@@ -37,6 +39,35 @@ class Playground extends Model
      * via DAY_KEYS[dayOfWeekIso - 1].
      */
     public const array DAY_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+
+    /**
+     * Generates a stable slug from the name at creation time only - not
+     * regenerated on rename, so a shared booking link keeps working even
+     * after an admin edits the playground's name later. Not in $fillable:
+     * this is always system-generated, never client-settable.
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (Playground $playground) {
+            if (empty($playground->slug)) {
+                $playground->slug = static::generateUniqueSlug($playground->name);
+            }
+        });
+    }
+
+    protected static function generateUniqueSlug(string $name): string
+    {
+        $base = (new Slugify())->slugify($name);
+        $slug = $base;
+        $suffix = 2;
+
+        while (static::query()->where('slug', $slug)->exists()) {
+            $slug = $base . '-' . $suffix;
+            $suffix++;
+        }
+
+        return $slug;
+    }
 
     protected $fillable = [
         'area_id',

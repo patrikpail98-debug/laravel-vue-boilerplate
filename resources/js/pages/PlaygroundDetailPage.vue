@@ -71,7 +71,7 @@
                     </template>
 
                     <div class="card-actions justify-end mt-8">
-                        <router-link :to="`/rezervacia/${playground.id}`" class="btn btn-primary btn-lg">
+                        <router-link :to="`/rezervacia/${playground.slug}`" class="btn btn-primary btn-lg">
                             Rezervovať ihrisko
                         </router-link>
                     </div>
@@ -124,7 +124,7 @@ const navigationUrl = computed(() =>
 
 onMounted(async () => {
     try {
-        const response = await http.request(`/api/playgrounds/${route.params.playgroundId}`);
+        const response = await http.request(`/api/playgrounds/${route.params.slug}`);
         if (!response.ok) {
             throw new Error('Ihrisko sa nepodarilo nájsť.');
         }

@@ -41,7 +41,7 @@
                 <div v-if="visiblePlaygrounds.length" class="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                     <div v-for="playground in visiblePlaygrounds" :key="playground.id"
                          class="card bg-base-100 shadow hover:shadow-lg transition-shadow overflow-hidden">
-                        <router-link :to="`/rezervacia/ihrisko/${playground.id}`" class="block">
+                        <router-link :to="`/rezervacia/ihrisko/${playground.slug}`" class="block">
                             <figure class="aspect-[4/3] bg-base-200">
                                 <img v-if="playground.image_url" :src="playground.image_url" :alt="playground.name"
                                      class="w-full h-full object-cover"/>
@@ -52,12 +52,12 @@
                         </router-link>
 
                         <div class="card-body p-3 gap-1.5">
-                            <router-link :to="`/rezervacia/ihrisko/${playground.id}`" class="link link-hover">
+                            <router-link :to="`/rezervacia/ihrisko/${playground.slug}`" class="link link-hover">
                                 <h3 class="card-title text-sm leading-tight">{{ playground.name }}</h3>
                             </router-link>
                             <p v-if="!selectedArea" class="text-xs text-base-content/60 -mt-1">{{ playground.areaName }}</p>
 
-                            <router-link :to="`/rezervacia/${playground.id}`"
+                            <router-link :to="`/rezervacia/${playground.slug}`"
                                          class="btn btn-secondary btn-xs w-full justify-between mt-1">
                                 Rezervovať
                                 <span>{{ Number(playground.price_per_30min).toFixed(2) }} &euro; / 30 min</span>

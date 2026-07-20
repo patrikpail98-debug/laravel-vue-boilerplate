@@ -16,7 +16,7 @@
                     <p v-if="playgroundInfo.area_name" class="text-sm text-base-content/70 mb-4">{{ playgroundInfo.area_name }}</p>
 
                     <SlotPicker
-                        :playground-id="playgroundId"
+                        :playground-id="playgroundSlug"
                         :max-horizon-days="rules.maxHorizonDays"
                         :max-duration-minutes="rules.maxDurationMinutes"
                         :price-per30-min="rules.pricePer30Min"
@@ -121,11 +121,15 @@ import 'notyf/notyf.min.css';
 
 const route = useRoute();
 const authStore = useAuthStore();
-const playgroundId = route.params.playgroundId;
+const playgroundSlug = route.params.slug;
 
 const playgroundInfo = reactive({name: '', area_name: '', allowCardPayment: false});
 const rules = reactive({maxHorizonDays: 60, maxDurationMinutes: 120, pricePer30Min: 0});
 const selection = ref(null);
+// The real UUID primary key, captured from SlotPicker's availability response
+// (playground.id) once it loads - POST /api/reservations still needs the
+// actual id, not the slug the page was routed in on.
+const playgroundRealId = ref(null);
 const loading = ref(false);
 const submitted = ref('');
 const showPaymentModal = ref(false);
@@ -144,6 +148,7 @@ const onSlotPickerLoaded = (data) => {
     playgroundInfo.name = data.playground?.name ?? '';
     playgroundInfo.area_name = data.playground?.area_name ?? '';
     playgroundInfo.allowCardPayment = data.playground?.allow_card_payment ?? false;
+    playgroundRealId.value = data.playground?.id ?? null;
     rules.maxHorizonDays = data.max_horizon_days ?? rules.maxHorizonDays;
     rules.maxDurationMinutes = data.max_duration_minutes ?? rules.maxDurationMinutes;
     rules.pricePer30Min = data.price_per_30min ?? rules.pricePer30Min;
@@ -170,7 +175,7 @@ const submit = async (paymentMethod) => {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
-                playground_id: playgroundId,
+                playground_id: playgroundRealId.value,
                 customer_name: form.customer_name,
                 customer_email: form.customer_email,
                 customer_phone: form.customer_phone,

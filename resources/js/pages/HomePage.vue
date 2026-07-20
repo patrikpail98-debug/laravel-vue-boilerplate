@@ -27,7 +27,7 @@
 
             <div v-else-if="playgrounds.length" class="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 <router-link v-for="playground in playgrounds" :key="playground.id"
-                             :to="`/rezervacia/ihrisko/${playground.id}`"
+                             :to="`/rezervacia/ihrisko/${playground.slug}`"
                              class="card bg-base-100 shadow hover:shadow-lg transition-shadow overflow-hidden">
                     <figure class="h-40 bg-base-200">
                         <img v-if="playground.image_url" :src="playground.image_url" :alt="playground.name" class="w-full h-full object-cover"/>

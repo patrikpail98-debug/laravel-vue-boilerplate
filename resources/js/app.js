@@ -62,13 +62,13 @@ const routes = [
         meta: {public: true}
     },
     {
-        path: '/rezervacia/ihrisko/:playgroundId',
+        path: '/rezervacia/ihrisko/:slug',
         name: 'reservations.playground-detail',
         component: () => import('./pages/PlaygroundDetailPage.vue'),
         meta: {public: true}
     },
     {
-        path: '/rezervacia/:playgroundId',
+        path: '/rezervacia/:slug',
         name: 'reservations.booking',
         component: () => import('./pages/BookingPage.vue'),
         meta: {public: true}

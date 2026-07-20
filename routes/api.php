@@ -42,9 +42,11 @@ Route::middleware(['throttle:api'])->group(function () {
     });
 
     Route::prefix('playgrounds')->group(function () {
-        Route::get('/{playground}', [PlaygroundController::class, 'show']);
-        Route::get('/{playground}/day-availability', [PlaygroundController::class, 'dayAvailability']);
-        Route::get('/{playground}/availability', [PlaygroundController::class, 'availability']);
+        // Slug-bound (not the UUID id) so public reservation links stay short
+        // and shareable - admin management routes below keep binding on id.
+        Route::get('/{playground:slug}', [PlaygroundController::class, 'show']);
+        Route::get('/{playground:slug}/day-availability', [PlaygroundController::class, 'dayAvailability']);
+        Route::get('/{playground:slug}/availability', [PlaygroundController::class, 'availability']);
     });
 
     Route::prefix('reservations')->group(function () {

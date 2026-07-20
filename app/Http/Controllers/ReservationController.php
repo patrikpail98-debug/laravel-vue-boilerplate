@@ -140,6 +140,11 @@ class ReservationController extends Controller
             return $this->errorResponse(['message' => 'Neplatná platobná transakcia.'], 404);
         }
 
+        // The frontend's retry link needs the playground's slug (not just the
+        // raw playground_id FK already on $verified) to build a public
+        // /rezervacia/{slug} URL.
+        $verified->loadMissing('playground');
+
         return $this->successResponse([
             'status' => $verified->status,
             'reservation' => $verified,
